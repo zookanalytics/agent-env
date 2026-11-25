@@ -246,7 +246,7 @@ source /path/to/@zookanalytics/agent-env/completions/_agent-env
 source /path/to/@zookanalytics/agent-env/completions/agent-env.bash
 ```
 
-zsh users can instead add the directory to `fpath` so the script is only loaded on first use:
+zsh users can instead add the directory to `fpath` so the script is only loaded the first time you press <kbd>Tab</kbd> after `agent-env` or `aecd`:
 
 ```bash
 # ~/.zshrc (before compinit)
@@ -254,7 +254,7 @@ fpath=(/path/to/@zookanalytics/agent-env/completions $fpath)
 autoload -Uz compinit && compinit
 ```
 
-Caveats of the `fpath` method: the first <kbd>Tab</kbd> after `agent-env` in each new shell only loads the script (press <kbd>Tab</kbd> again to see completions), and `aecd` is not defined until then. Use `source` if you want either to work immediately.
+With `fpath`, the `aecd` function itself is only defined once that first <kbd>Tab</kbd> has loaded the script (so `aecd <Tab>` works, but typing `aecd name` in full in a fresh shell does not). Use `source` or `eval` if you rely on `aecd` without completing first.
 
 The path changes if you switch Node versions or package managers; the `eval` method is unaffected by that.
 

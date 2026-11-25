@@ -147,8 +147,20 @@ describe('completion', () => {
         expect(script).toContain('_agent_env');
         // Should register the main completion function
         expect(script).toContain('compdef _agent_env agent-env');
-        // Final line should register the aecd completion function
-        expect(script.trim().endsWith('compdef _aecd aecd')).toBe(true);
+        // Should register the aecd completion function
+        expect(script).toContain('compdef _aecd aecd');
+      });
+
+      it('completes on the first Tab when autoloaded from fpath', () => {
+        const script = generateCompletionScript('zsh', TEST_COMMANDS);
+        // compinit must route both commands to the autoloaded file
+        expect(script.startsWith('#compdef agent-env aecd\n')).toBe(true);
+        // When run as the autoloaded _agent-env function, the script must dispatch
+        // to the real completer itself, after everything has been defined
+        const tail = script.slice(script.lastIndexOf('compdef _aecd aecd'));
+        expect(tail).toContain('if [[ "${funcstack[1]}" == "_agent-env" ]]; then');
+        expect(tail).toContain('aecd) _aecd "$@" ;;');
+        expect(tail).toContain('*) _agent_env "$@" ;;');
       });
 
       it('includes all provided commands with descriptions', () => {

@@ -234,7 +234,7 @@ function generateZshCompletion(commands: CompletionCommandMeta[]): string {
     return entries;
   });
 
-  return `#compdef agent-env
+  return `#compdef agent-env aecd
 # agent-env zsh completion script
 # Install: eval "$(agent-env completion zsh)"
 
@@ -343,7 +343,8 @@ ${commandDescriptions.map((desc) => `    '${desc}'`).join('\n')}
 compdef _agent_env agent-env
 
 # aecd: cd into an instance's host directory
-# Note: requires eval installation (not fpath autoload) for the function to be available
+# Note: with fpath autoload this is defined on the first Tab after agent-env or aecd;
+# eval or source the script to have it available immediately
 aecd() {
   local dir
   dir="$(agent-env path "$@")" || return 1
@@ -356,5 +357,15 @@ _aecd() {
     '1:instance:_agent_env_instances'
 }
 
-compdef _aecd aecd`;
+compdef _aecd aecd
+
+# When autoloaded from fpath, this file is the body of the _agent-env function and
+# is running because of a Tab press: the definitions above are now loaded, so
+# complete the current word right away instead of waiting for the next Tab.
+if [[ "\${funcstack[1]}" == "_agent-env" ]]; then
+  case "\${service}" in
+    aecd) _aecd "$@" ;;
+    *) _agent_env "$@" ;;
+  esac
+fi`;
 }
