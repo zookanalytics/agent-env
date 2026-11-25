@@ -205,6 +205,59 @@ agent-env purpose <name>                      # Get current purpose
 agent-env purpose <name> "Working on feature X"  # Set purpose
 ```
 
+## Shell Completion
+
+Completion covers subcommands, options, instance names and repo slugs (the last two are read from `~/.agent-env/workspaces` at completion time), and defines the `aecd` helper (`cd` into an instance's host directory). There are two ways to install it.
+
+### Option 1: `eval` (simplest, always up to date)
+
+```bash
+# ~/.zshrc (after compinit)
+eval "$(agent-env completion zsh)"
+
+# ~/.bashrc
+eval "$(agent-env completion bash)"
+```
+
+`agent-env completion <shell>` prints a pre-generated script without loading the rest of the CLI, so this adds roughly the cost of starting Node (~30 ms) to shell startup. No caching wrapper is needed.
+
+### Option 2: static files (no process spawned)
+
+The same scripts ship in the package's `completions/` directory:
+
+| Shell | File                         |
+| ----- | ---------------------------- |
+| zsh   | `completions/_agent-env`     |
+| bash  | `completions/agent-env.bash` |
+
+Find the directory once with:
+
+```bash
+echo "$(npm root -g)/@zookanalytics/agent-env/completions"
+```
+
+Then reference that path literally in your rc file (calling `npm root -g` on every shell start would defeat the purpose):
+
+```bash
+# ~/.zshrc (after compinit) — sourcing gives you completion and aecd immediately
+source /path/to/@zookanalytics/agent-env/completions/_agent-env
+
+# ~/.bashrc
+source /path/to/@zookanalytics/agent-env/completions/agent-env.bash
+```
+
+zsh users can instead add the directory to `fpath` so the script is only loaded on first use:
+
+```bash
+# ~/.zshrc (before compinit)
+fpath=(/path/to/@zookanalytics/agent-env/completions $fpath)
+autoload -Uz compinit && compinit
+```
+
+Caveats of the `fpath` method: the first <kbd>Tab</kbd> after `agent-env` in each new shell only loads the script (press <kbd>Tab</kbd> again to see completions), and `aecd` is not defined until then. Use `source` if you want either to work immediately.
+
+The path changes if you switch Node versions or package managers; the `eval` method is unaffected by that.
+
 ## License
 
 MIT

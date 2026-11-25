@@ -139,6 +139,8 @@ RUN chmod +x /home/node/.local/bin/tmux-session /home/node/.local/bin/tmux-purpo
 # `pnpm add -g /opt/agent-env-dev` from there instead of installing from npm.
 COPY --chown=node:node packages/agent-env/package.json /opt/agent-env-dev/package.json
 COPY --chown=node:node packages/agent-env/bin/ /opt/agent-env-dev/bin/
+# Pre-generated completion scripts, printed by the bin fast path for `agent-env completion`
+COPY --chown=node:node packages/agent-env/completions/ /opt/agent-env-dev/completions/
 COPY --chown=node:node packages/agent-env/dist/ /opt/agent-env-dev/dist/
 # Strip workspace:* deps (already bundled by tsup) then install runtime deps
 RUN cd /opt/agent-env-dev && \

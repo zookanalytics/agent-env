@@ -2,12 +2,8 @@
  * Shared factory for InteractiveMenuDeps used by both `on` command and default CLI flow.
  */
 
-import { render } from 'ink';
-import React from 'react';
-
 import type { InteractiveMenuDeps } from './interactive-menu.js';
 
-import { MenuContainer } from '../components/MenuContainer.js';
 import { createAttachDefaultDeps, attachInstance as attachInstanceLib } from './attach-instance.js';
 import { createCodeDefaultDeps, codeInstance as codeInstanceLib } from './code-instance.js';
 import { getInstanceInfo as getInstanceInfoLib } from './list-instances.js';
@@ -144,7 +140,14 @@ export function buildMenuDeps(workspaceName: string): InteractiveMenuDeps {
       return { ok: true };
     },
     getInstanceInfo: (wsName) => getInstanceInfoLib(wsName),
-    renderMenu: (instanceInfo) => {
+    renderMenu: async (instanceInfo) => {
+      // Loaded lazily: ink + react dominate CLI startup time and are only
+      // needed once a menu is actually rendered.
+      const [{ render }, { default: React }, { MenuContainer }] = await Promise.all([
+        import('ink'),
+        import('react'),
+        import('../components/MenuContainer.js'),
+      ]);
       return new Promise((resolve) => {
         const { unmount, waitUntilExit } = render(
           React.createElement(MenuContainer, {
