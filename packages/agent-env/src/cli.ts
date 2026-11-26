@@ -2,12 +2,10 @@
 
 import { formatError, createError } from '@zookanalytics/shared';
 import { program } from 'commander';
-import { render } from 'ink';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import React from 'react';
 
 import packageJson from '../package.json' with { type: 'json' };
 import { attachCommand } from './commands/attach.js';
@@ -89,7 +87,12 @@ program.action(async () => {
   }
 
   // Step 1: Pick an instance
-  const { Select } = await import('@inkjs/ui');
+  // ink/react are loaded lazily so non-interactive commands don't pay for them.
+  const [{ Select }, { render }, { default: React }] = await Promise.all([
+    import('@inkjs/ui'),
+    import('ink'),
+    import('react'),
+  ]);
 
   const pickerResult = await launchInstancePicker({
     listInstances,

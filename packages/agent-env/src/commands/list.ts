@@ -2,12 +2,9 @@ import type { JsonOutput } from '@zookanalytics/shared';
 
 import { formatError, createError } from '@zookanalytics/shared';
 import { Command } from 'commander';
-import { render } from 'ink';
-import React from 'react';
 
 import type { Instance } from '../lib/list-instances.js';
 
-import { InstanceList } from '../components/InstanceList.js';
 import { listInstances } from '../lib/list-instances.js';
 
 export const listCommand = new Command('list')
@@ -59,7 +56,13 @@ export const listCommand = new Command('list')
       return;
     }
 
-    // Render with Ink
+    // Render with Ink. Loaded lazily: ink + react dominate CLI startup time, and
+    // the --json and error paths above never need them.
+    const [{ render }, { default: React }, { InstanceList }] = await Promise.all([
+      import('ink'),
+      import('react'),
+      import('../components/InstanceList.js'),
+    ]);
     const { unmount, waitUntilExit } = render(
       React.createElement(InstanceList, {
         instances: result.instances,

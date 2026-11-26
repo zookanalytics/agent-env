@@ -23,13 +23,14 @@
   "files": [
     "dist",
     "bin",
+    "completions",
     "config",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "dev": "tsx src/cli.ts",
-    "build": "tsup",
+    "build": "tsup && node scripts/generate-completions.mjs",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",

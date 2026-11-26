@@ -1,0 +1,148 @@
+#compdef agent-env aecd
+# agent-env zsh completion script
+# Install: eval "$(agent-env completion zsh)"
+
+_agent_env_repos() {
+  local ws_dir=~/.agent-env/workspaces
+  local -a repos
+  local entry base repo
+  if [[ -d "${ws_dir}" ]]; then
+    for entry in "${ws_dir}"/*/; do
+      [[ -d "${entry}" ]] || continue
+      base="${entry%/}"
+      base="${base##*/}"
+      repo="${base%-*}"
+      [[ "${repo}" != "${base}" ]] && repos+=("${repo}")
+    done
+  fi
+  repos=(${(u)repos})
+  _describe 'repo' repos
+}
+
+_agent_env_instances() {
+  local ws_dir=~/.agent-env/workspaces
+  local -a instances
+  local entry base
+  if [[ -d "${ws_dir}" ]]; then
+    for entry in "${ws_dir}"/*/; do
+      [[ -d "${entry}" ]] || continue
+      base="${entry%/}"
+      base="${base##*/}"
+      instances+=("${base}")
+    done
+  fi
+  instances=(${(u)instances})
+  _describe 'instance' instances
+}
+
+_agent_env() {
+  local -a commands
+  commands=(
+    'create:Create a new isolated development environment'
+    'env:Manage repo-level env files copied into workspaces'
+    'list:List all instances with status'
+    'ps:List all instances with status (alias)'
+    'attach:Attach to an instance'\''s tmux session'
+    'path:Print the host directory path for an instance'
+    'code:Open an instance in VS Code via Dev Containers'
+    'rebuild:Rebuild an instance by recreating its container'
+    'shutdown:Gracefully shut down an instance (save tmux state, stop container)'
+    'remove:Remove an instance with safety checks'
+    'purpose:Get or set the purpose/label for an instance. Inside a container: no instance name needed (agent-env purpose [value])'
+    'on:Open the interactive menu for an instance'
+    'repos:List tracked repositories'
+    'tmux-status:Output formatted instance status for tmux status bar (container only)'
+    'completion:Generate shell completion script for bash or zsh'
+  )
+
+  _arguments -C \
+    '--help[Show help]' \
+    '--version[Show version]' \
+    '1:command:->command' \
+    '*::arg:->args'
+
+  case $state in
+    command)
+      _describe 'command' commands
+      ;;
+    args)
+      case $words[1] in
+        on|code|attach|path|purpose)
+          _arguments \
+            '--repo[Repo slug to scope lookup]:slug:_agent_env_repos' \
+            '1:instance:_agent_env_instances'
+          ;;
+        create)
+          _arguments \
+            '--repo[Repository URL]:url:' \
+            '--purpose[Set instance purpose]:text:' \
+            '--attach[Attach after creation]'
+          ;;
+        list|ps)
+          _arguments \
+            '--json[Output as JSON]' \
+            '--repo[Filter by repo slug]:slug:_agent_env_repos'
+          ;;
+        rebuild)
+          _arguments \
+            '--force[Rebuild running container]' \
+            '--yes[Skip confirmation prompt]' \
+            '--no-pull[Skip pulling fresh images]' \
+            '--use-cache[Allow Docker layer cache]' \
+            '--repo[Repo slug to scope lookup]:slug:_agent_env_repos' \
+            '1:instance:_agent_env_instances'
+          ;;
+        shutdown)
+          _arguments \
+            '--yes[Skip confirmation prompt]' \
+            '--repo[Repo slug to scope lookup]:slug:_agent_env_repos' \
+            '1:instance:_agent_env_instances'
+          ;;
+        remove)
+          _arguments \
+            '--force[Force removal]' \
+            '--repo[Repo slug to scope lookup]:slug:_agent_env_repos' \
+            '1:instance:_agent_env_instances'
+          ;;
+        repos)
+          _arguments \
+            '--json[Output as JSON]'
+          ;;
+        tmux-status)
+          ;;
+        completion)
+          _describe 'shell' '(bash zsh)'
+          ;;
+      esac
+      ;;
+  esac
+}
+
+compdef _agent_env agent-env
+
+# aecd: cd into an instance's host directory
+# Note: with fpath autoload this is defined on the first Tab after agent-env or aecd;
+# eval or source the script to have it available immediately
+aecd() {
+  local dir
+  dir="$(agent-env path "$@")" || return 1
+  cd "${dir}" || return 1
+}
+
+_aecd() {
+  _arguments \
+    '--repo[Repo slug to scope lookup]:slug:_agent_env_repos' \
+    '1:instance:_agent_env_instances'
+}
+
+compdef _aecd aecd
+
+# When autoloaded from fpath, this file is the body of the _agent-env function and
+# is running because of a Tab press: the definitions above are now loaded, so
+# complete the current word right away instead of waiting for the next Tab.
+if [[ "${funcstack[1]}" == "_agent-env" ]]; then
+  case "${service}" in
+    aecd) _aecd "$@" ;;
+    *) _agent_env "$@" ;;
+  esac
+fi

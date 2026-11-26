@@ -7,7 +7,11 @@ export default defineConfig({
   outDir: 'dist',
   clean: true,
   dts: true,
-  splitting: false,
+  // Splitting keeps the TUI stack (ink, react, inlined @inkjs/ui, components) in
+  // chunks that are only loaded by the dynamic import()s in commands that render.
+  // Without it, the inlined @inkjs/ui would hoist its static ink/react imports
+  // into cli.js and every command would pay ~200ms to load them.
+  splitting: true,
   sourcemap: false,
   // Bundle @zookanalytics/shared into the output so consumers don't need it
   // shared is a private workspace package that won't be on npm.

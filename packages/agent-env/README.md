@@ -205,6 +205,20 @@ agent-env purpose <name>                      # Get current purpose
 agent-env purpose <name> "Working on feature X"  # Set purpose
 ```
 
+## Shell Completion
+
+```bash
+# ~/.zshrc (after compinit)
+eval "$(agent-env completion zsh)"
+
+# ~/.bashrc
+eval "$(agent-env completion bash)"
+```
+
+This completes subcommands, options, instance names and repo slugs, and defines `aecd` (`cd` into an instance's host directory).
+
+The same scripts ship as static files in the package's `completions/` directory (`_agent-env` for zsh, `agent-env.bash` for bash) if you prefer to `source` them or add the directory to `fpath`.
+
 ## License
 
 MIT
