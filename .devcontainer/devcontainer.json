@@ -17,8 +17,7 @@
   "containerEnv": {
     "AGENT_INSTANCE": "${localWorkspaceFolderBasename}",
     "PROJECT_NAME": "agent-tools",
-    "NODE_OPTIONS": "--max-old-space-size=4096",
-    "ENABLE_BMAD_ORCHESTRATOR": "true"
+    "NODE_OPTIONS": "--max-old-space-size=4096"
   },
   "portsAttributes": {
     "6006": { "onAutoForward": "ignore" }

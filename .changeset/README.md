@@ -18,9 +18,7 @@ Currently publishable:
 
 ### Private Package Exclusion
 
-The `@zookanalytics/bmad-orchestrator`, `@zookanalytics/shared`,
-`@zookanalytics/bmm-retrospective-module`, and the monorepo
-root are marked `"private": true` in their respective `package.json` files. Changesets
+`@zookanalytics/shared` and the monorepo root are marked `"private": true` in their respective `package.json` files. Changesets
 natively respects this flag and excludes private packages from version bumps and publishing.
 No explicit `ignore` array entry is needed in `config.json`.
 

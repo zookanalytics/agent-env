@@ -169,14 +169,11 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -a 'export PATH="$HOME/.local/bin:$PATH"' \
   -x
 
-# Install bun (required for keystone-cli)
+# Install bun runtime
 # Must run as node user to install to ~/.bun
 RUN curl -fsSL https://bun.sh/install | bash
 ENV BUN_INSTALL="/home/node/.bun"
 ENV PATH="$BUN_INSTALL/bin:$PATH"
-
-# Install keystone-cli globally via bun (must run as node user for PATH)
-RUN bun install -g github:ZookAnalytics/keystone-cli
 
 USER root
 

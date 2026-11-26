@@ -24,12 +24,6 @@ check "bun runtime" "bun --version"
 check "node runtime" "node --version"
 check "pnpm runtime" "pnpm --version"
 
-# Keystone
-check "keystone binary" "keystone --version"
-check "keystone workflows exist" "ls ~/.keystone/workflows/bmad-*.yaml"
-check "keystone workflow discovery" "keystone run --list 2>/dev/null | grep -q bmad"
-check "keystone config exists" "test -f ~/.config/keystone/config.yaml"
-
 # AI CLIs
 check "claude cli" "command -v claude"
 check "gemini cli" "command -v gemini"

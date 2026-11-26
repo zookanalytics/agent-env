@@ -1,6 +1,5 @@
-# Signal Loom project-specific domains
-# Base domains are provided by the claude-devcontainer image
-# See: https://github.com/zookanalytics/claude-devcontainer/blob/main/.devcontainer/allowed-domains.txt
+# Project-specific domains for this repo
+# Base domains are provided by the devcontainer image (image/config/allowed-domains.txt)
 
 # Firecrawl MCP
 api.firecrawl.dev

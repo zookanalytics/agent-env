@@ -1,8 +1,8 @@
 {
-  "name": "bmad-orchestrator-monorepo",
+  "name": "agent-env-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Monorepo for BMAD agent tools (orchestrator and agent-env CLIs)",
+  "description": "Monorepo for agent-env: isolated, AI-ready development environments and the devcontainer image",
   "type": "module",
   "engines": {
     "node": ">=24",
@@ -20,20 +20,15 @@
     "lint": "pnpm -r lint",
     "check": "pnpm -r check",
     "type-check": "pnpm -r type-check",
-    "dev:orchestrator": "pnpm --filter @zookanalytics/bmad-orchestrator dev",
     "dev:agent-env": "pnpm --filter @zookanalytics/agent-env dev",
     "bootstrap": "pnpm install && pnpm build",
     "setup:agent-env": "pnpm run bootstrap && pnpm add -g ./packages/agent-env",
-    "test:install:retro": "node packages/bmm-retrospective-module/test-install.cjs",
-    "bmad:install":"npx bmad-method install --directory $PWD --modules core,bmm,bmb,tea",
     "changeset": "changeset",
     "version-packages": "changeset version && node scripts/sync-dogfood-pin.mjs",
     "prepare": "husky"
   },
   "keywords": [
-    "bmad",
     "devpod",
-    "orchestrator",
     "agent-env",
     "cli",
     "tui"
