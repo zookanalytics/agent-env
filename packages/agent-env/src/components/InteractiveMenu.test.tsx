@@ -424,7 +424,7 @@ describe('InteractiveMenu', () => {
 
     // Compose drift-test image references from a base so no test contains a
     // hardcoded "<repo>:<semver>" literal (AC12 falsifiable grep).
-    const IMAGE_BASE = 'ghcr.io/zookanalytics/bmad-orchestrator/devcontainer';
+    const IMAGE_BASE = 'ghcr.io/zookanalytics/agent-env/devcontainer';
     const CONFIGURED_IMAGE = IMAGE_BASE + ':' + '1.0.0';
     const EXPECTED_IMAGE = IMAGE_BASE + ':' + '1.2.0';
 

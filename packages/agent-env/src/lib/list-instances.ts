@@ -24,9 +24,9 @@ export type InstanceDisplayStatus = ContainerStatus | 'orphaned' | 'unknown';
 
 /** A single instance's data for display */
 export interface Instance {
-  /** Workspace name (e.g., "bmad-orch-auth") */
+  /** Workspace name (e.g., "agent-env-auth") */
   name: string;
-  /** Repo slug derived from git remote URL (e.g., "bmad-orchestrator") */
+  /** Repo slug derived from git remote URL (e.g., "agent-env") */
   repoSlug: string;
   /** Full git remote URL */
   repoUrl: string;

@@ -18,7 +18,7 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 
 const pkg = JSON.parse(await readFile(join(repoRoot, 'packages/agent-env/package.json'), 'utf8'));
 const version = pkg.version;
-const IMAGE_REPO = 'ghcr.io/zookanalytics/bmad-orchestrator/devcontainer';
+const IMAGE_REPO = 'ghcr.io/zookanalytics/agent-env/devcontainer';
 const expectedImage = `${IMAGE_REPO}:${version}`;
 
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

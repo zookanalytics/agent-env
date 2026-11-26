@@ -961,13 +961,13 @@ describe('listInstances', () => {
   describe('repo fields (Story 7.4)', () => {
     it('includes repoSlug and repoUrl from state', async () => {
       const container = mockContainer();
-      const wsFsDeps = mockFsDeps(['bmad-orch-auth']);
+      const wsFsDeps = mockFsDeps(['agent-env-auth']);
       const stateFsDeps = mockStateFsDeps({
-        'bmad-orch-auth': makeState({
+        'agent-env-auth': makeState({
           instance: 'auth',
-          repoSlug: 'bmad-orchestrator',
-          repoUrl: 'https://github.com/user/bmad-orchestrator.git',
-          containerName: 'ae-bmad-orchestrator-auth',
+          repoSlug: 'agent-env',
+          repoUrl: 'https://github.com/user/agent-env.git',
+          containerName: 'ae-agent-env-auth',
         }),
       });
 
@@ -979,8 +979,8 @@ describe('listInstances', () => {
       });
       assertSuccess(result);
 
-      expect(result.instances[0].repoSlug).toBe('bmad-orchestrator');
-      expect(result.instances[0].repoUrl).toBe('https://github.com/user/bmad-orchestrator.git');
+      expect(result.instances[0].repoSlug).toBe('agent-env');
+      expect(result.instances[0].repoUrl).toBe('https://github.com/user/agent-env.git');
     });
 
     it('includes fallback repoSlug/repoUrl for missing state', async () => {
@@ -1006,13 +1006,13 @@ describe('listInstances', () => {
 
     it('includes different repoSlugs for instances from different repos', async () => {
       const container = mockContainer();
-      const wsFsDeps = mockFsDeps(['bmad-orch-auth', 'awesome-cli-dev']);
+      const wsFsDeps = mockFsDeps(['agent-env-auth', 'awesome-cli-dev']);
       const stateFsDeps = mockStateFsDeps({
-        'bmad-orch-auth': makeState({
+        'agent-env-auth': makeState({
           instance: 'auth',
-          repoSlug: 'bmad-orchestrator',
-          repoUrl: 'https://github.com/user/bmad-orchestrator.git',
-          containerName: 'ae-bmad-orchestrator-auth',
+          repoSlug: 'agent-env',
+          repoUrl: 'https://github.com/user/agent-env.git',
+          containerName: 'ae-agent-env-auth',
         }),
         'awesome-cli-dev': makeState({
           instance: 'dev',
@@ -1031,7 +1031,7 @@ describe('listInstances', () => {
       assertSuccess(result);
 
       expect(result.instances).toHaveLength(2);
-      expect(result.instances[0].repoSlug).toBe('bmad-orchestrator');
+      expect(result.instances[0].repoSlug).toBe('agent-env');
       expect(result.instances[1].repoSlug).toBe('awesome-cli');
     });
   });
@@ -1039,13 +1039,13 @@ describe('listInstances', () => {
   describe('repo filter (Story 7.4)', () => {
     it('filters instances by repoSlug when repoFilter is provided', async () => {
       const container = mockContainer();
-      const wsFsDeps = mockFsDeps(['bmad-orch-auth', 'awesome-cli-dev', 'bmad-orch-api']);
+      const wsFsDeps = mockFsDeps(['agent-env-auth', 'awesome-cli-dev', 'agent-env-api']);
       const stateFsDeps = mockStateFsDeps({
-        'bmad-orch-auth': makeState({
+        'agent-env-auth': makeState({
           instance: 'auth',
-          repoSlug: 'bmad-orchestrator',
-          repoUrl: 'https://github.com/user/bmad-orchestrator.git',
-          containerName: 'ae-bmad-orchestrator-auth',
+          repoSlug: 'agent-env',
+          repoUrl: 'https://github.com/user/agent-env.git',
+          containerName: 'ae-agent-env-auth',
         }),
         'awesome-cli-dev': makeState({
           instance: 'dev',
@@ -1053,11 +1053,11 @@ describe('listInstances', () => {
           repoUrl: 'https://github.com/user/awesome-cli.git',
           containerName: 'ae-awesome-cli-dev',
         }),
-        'bmad-orch-api': makeState({
+        'agent-env-api': makeState({
           instance: 'api',
-          repoSlug: 'bmad-orchestrator',
-          repoUrl: 'https://github.com/user/bmad-orchestrator.git',
-          containerName: 'ae-bmad-orchestrator-api',
+          repoSlug: 'agent-env',
+          repoUrl: 'https://github.com/user/agent-env.git',
+          containerName: 'ae-agent-env-api',
         }),
       });
 
@@ -1068,24 +1068,24 @@ describe('listInstances', () => {
           workspaceFsDeps: wsFsDeps,
           stateFsDeps,
         },
-        { repoFilter: 'bmad-orchestrator' }
+        { repoFilter: 'agent-env' }
       );
       assertSuccess(result);
 
       expect(result.instances).toHaveLength(2);
-      expect(result.instances[0].repoSlug).toBe('bmad-orchestrator');
-      expect(result.instances[1].repoSlug).toBe('bmad-orchestrator');
+      expect(result.instances[0].repoSlug).toBe('agent-env');
+      expect(result.instances[1].repoSlug).toBe('agent-env');
     });
 
     it('returns empty array when no instances match repoFilter', async () => {
       const container = mockContainer();
-      const wsFsDeps = mockFsDeps(['bmad-orch-auth']);
+      const wsFsDeps = mockFsDeps(['agent-env-auth']);
       const stateFsDeps = mockStateFsDeps({
-        'bmad-orch-auth': makeState({
+        'agent-env-auth': makeState({
           instance: 'auth',
-          repoSlug: 'bmad-orchestrator',
-          repoUrl: 'https://github.com/user/bmad-orchestrator.git',
-          containerName: 'ae-bmad-orchestrator-auth',
+          repoSlug: 'agent-env',
+          repoUrl: 'https://github.com/user/agent-env.git',
+          containerName: 'ae-agent-env-auth',
         }),
       });
 
@@ -1105,13 +1105,13 @@ describe('listInstances', () => {
 
     it('performs case-insensitive repoFilter matching', async () => {
       const container = mockContainer();
-      const wsFsDeps = mockFsDeps(['bmad-orch-auth']);
+      const wsFsDeps = mockFsDeps(['agent-env-auth']);
       const stateFsDeps = mockStateFsDeps({
-        'bmad-orch-auth': makeState({
+        'agent-env-auth': makeState({
           instance: 'auth',
-          repoSlug: 'bmad-orchestrator',
-          repoUrl: 'https://github.com/user/bmad-orchestrator.git',
-          containerName: 'ae-bmad-orchestrator-auth',
+          repoSlug: 'agent-env',
+          repoUrl: 'https://github.com/user/agent-env.git',
+          containerName: 'ae-agent-env-auth',
         }),
       });
 
@@ -1122,23 +1122,23 @@ describe('listInstances', () => {
           workspaceFsDeps: wsFsDeps,
           stateFsDeps,
         },
-        { repoFilter: 'BMAD-ORCHESTRATOR' }
+        { repoFilter: 'AGENT-ENV' }
       );
       assertSuccess(result);
 
       expect(result.instances).toHaveLength(1);
-      expect(result.instances[0].repoSlug).toBe('bmad-orchestrator');
+      expect(result.instances[0].repoSlug).toBe('agent-env');
     });
 
     it('returns all instances when repoFilter is undefined', async () => {
       const container = mockContainer();
-      const wsFsDeps = mockFsDeps(['bmad-orch-auth', 'awesome-cli-dev']);
+      const wsFsDeps = mockFsDeps(['agent-env-auth', 'awesome-cli-dev']);
       const stateFsDeps = mockStateFsDeps({
-        'bmad-orch-auth': makeState({
+        'agent-env-auth': makeState({
           instance: 'auth',
-          repoSlug: 'bmad-orchestrator',
-          repoUrl: 'https://github.com/user/bmad-orchestrator.git',
-          containerName: 'ae-bmad-orchestrator-auth',
+          repoSlug: 'agent-env',
+          repoUrl: 'https://github.com/user/agent-env.git',
+          containerName: 'ae-agent-env-auth',
         }),
         'awesome-cli-dev': makeState({
           instance: 'dev',

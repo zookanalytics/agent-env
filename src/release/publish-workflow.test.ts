@@ -212,7 +212,7 @@ describe('publish workflow inline documentation', () => {
   it('contains Trusted Publishing (OIDC) documentation', () => {
     const raw = readFileSync(PUBLISH_WORKFLOW_PATH, 'utf-8');
     expect(raw).toContain('TRUSTED PUBLISHING (OIDC)');
-    expect(raw).toContain('ZookAnalytics/bmad-orchestrator');
+    expect(raw).toContain('ZookAnalytics/agent-env');
     expect(raw).toContain('publish.yml');
   });
 
@@ -309,7 +309,7 @@ describe('publish workflow GitHub release automation (FR8, NFR10)', () => {
   it('changelog-github plugin references correct repository', () => {
     const configPath = resolve(CHANGESET_DIR, 'config.json');
     const config = JSON.parse(readFileSync(configPath, 'utf-8'));
-    expect(config.changelog[1]).toEqual({ repo: 'ZookAnalytics/bmad-orchestrator' });
+    expect(config.changelog[1]).toEqual({ repo: 'ZookAnalytics/agent-env' });
   });
 
   // Note: contents: write permission (required for release creation) is tested in

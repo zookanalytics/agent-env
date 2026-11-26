@@ -52,9 +52,7 @@ describe('README badges (FR25, rel-3-3)', () => {
   it('publish badge links to the workflow runs page', () => {
     const readme = loadReadme();
     // Badge should be wrapped in a link to the Actions workflow page
-    expect(readme).toContain(
-      'github.com/ZookAnalytics/bmad-orchestrator/actions/workflows/publish.yml'
-    );
+    expect(readme).toContain('github.com/ZookAnalytics/agent-env/actions/workflows/publish.yml');
   });
 
   it('npm badge links to the npm package page', () => {

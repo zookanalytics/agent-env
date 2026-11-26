@@ -52,7 +52,7 @@ function createTestState(
   overrides: Partial<InstanceState> = {}
 ): InstanceState {
   // Derive instance name from workspace name by splitting at the LAST dash
-  // e.g., "bmad-orch-auth" → instance="auth", repoSlug="bmad-orch"
+  // e.g., "agent-env-auth" → instance="auth", repoSlug="agent-env"
   const lastDashIdx = workspaceName.lastIndexOf('-');
   const instance = lastDashIdx > 0 ? workspaceName.slice(lastDashIdx + 1) : workspaceName;
   const repoSlug = lastDashIdx > 0 ? workspaceName.slice(0, lastDashIdx) : 'repo';
@@ -133,11 +133,11 @@ describe('findWorkspaceByName', () => {
   });
 
   it('finds workspace by instance name suffix', async () => {
-    await createTestWorkspace('bmad-orch-auth', createTestState('bmad-orch-auth'));
+    await createTestWorkspace('agent-env-auth', createTestState('agent-env-auth'));
 
     const result = await findWorkspaceByName('auth', fsDeps);
 
-    expect(result).toEqual({ found: true, workspaceName: 'bmad-orch-auth' });
+    expect(result).toEqual({ found: true, workspaceName: 'agent-env-auth' });
   });
 
   it('returns not-found when no workspace matches', async () => {

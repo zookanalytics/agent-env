@@ -126,7 +126,7 @@ jobs:
       #
       # Configuration (completed 2026-02-06):
       #   - Package: @zookanalytics/agent-env
-      #   - Repository: ZookAnalytics/bmad-orchestrator
+      #   - Repository: ZookAnalytics/agent-env
       #   - Workflow: publish.yml
       #   - npm settings: https://www.npmjs.com/package/@zookanalytics/agent-env/access
       #
@@ -138,7 +138,7 @@ jobs:
       # To verify/fix Trusted Publishing:
       #   1. Go to npmjs.com/package/@zookanalytics/agent-env/access
       #   2. Check "Publishing access" → "Trusted Publishing" section
-      #   3. Verify repository is "ZookAnalytics/bmad-orchestrator"
+      #   3. Verify repository is "ZookAnalytics/agent-env"
       #   4. Verify workflow name is "publish.yml"
       #   5. If OIDC fails with 403/401, re-check steps 3-4 — names must match exactly
       #   6. If package is unlinked, re-link via npm package settings

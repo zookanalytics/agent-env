@@ -50,7 +50,7 @@ describe('isRepoUrl', () => {
   });
 
   it('returns false for plain slugs', () => {
-    expect(isRepoUrl('bmad-orchestrator')).toBe(false);
+    expect(isRepoUrl('agent-env')).toBe(false);
     expect(isRepoUrl('awesome-cli')).toBe(false);
     expect(isRepoUrl('my.repo')).toBe(false);
   });
@@ -106,8 +106,8 @@ describe('resolveRepoArg', () => {
       const mockListRepos = vi.fn().mockResolvedValue(
         makeReposSuccess([
           {
-            slug: 'bmad-orchestrator',
-            url: 'https://github.com/user/bmad-orchestrator.git',
+            slug: 'agent-env',
+            url: 'https://github.com/user/agent-env.git',
             instanceCount: 2,
           },
           {
@@ -118,10 +118,10 @@ describe('resolveRepoArg', () => {
         ])
       );
 
-      const result = await resolveRepoArg('bmad-orchestrator', { listRepos: mockListRepos });
+      const result = await resolveRepoArg('agent-env', { listRepos: mockListRepos });
 
       assertSuccess(result);
-      expect(result.url).toBe('https://github.com/user/bmad-orchestrator.git');
+      expect(result.url).toBe('https://github.com/user/agent-env.git');
       expect(result.resolvedFromSlug).toBe(true);
       expect(mockListRepos).toHaveBeenCalledTimes(1);
     });
@@ -132,8 +132,8 @@ describe('resolveRepoArg', () => {
       const mockListRepos = vi.fn().mockResolvedValue(
         makeReposSuccess([
           {
-            slug: 'bmad-orchestrator',
-            url: 'https://github.com/user/bmad-orchestrator.git',
+            slug: 'agent-env',
+            url: 'https://github.com/user/agent-env.git',
             instanceCount: 1,
           },
         ])

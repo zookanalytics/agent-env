@@ -331,11 +331,11 @@ describe('rebuildInstance', () => {
   });
 
   it('finds workspace by instance field in state.json', async () => {
-    const state = createTestState('bmad-orch-auth', {
-      repoSlug: 'bmad-orch',
+    const state = createTestState('agent-env-auth', {
+      repoSlug: 'agent-env',
       repoConfigDetected: false,
     });
-    await createTestWorkspace('bmad-orch-auth', state, {
+    await createTestWorkspace('agent-env-auth', state, {
       devcontainerFiles: ['devcontainer.json', 'init-host.sh'],
     });
     const deps = createTestDeps();

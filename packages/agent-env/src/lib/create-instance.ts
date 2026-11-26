@@ -192,7 +192,7 @@ export async function resolveRepoUrl(repoArg: string, executor: Execute): Promis
  * (or create) a tmux session named "main". Uses stdio: 'inherit'
  * so the user's terminal is replaced by the tmux session.
  *
- * @param containerName - Docker container name (e.g., "ae-bmad-orch-auth")
+ * @param containerName - Docker container name (e.g., "ae-agent-env-auth")
  * @param executor - Subprocess executor
  * @returns Result indicating success or failure
  */

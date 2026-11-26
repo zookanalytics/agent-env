@@ -67,9 +67,9 @@ jobs:
           # extract the image line via grep instead of jq. Anchor on the managed
           # repo coordinate (not indentation, which reformatting would break) —
           # a nested `image` key would not reference this coordinate.
-          IMAGE=$(grep -oE '"image"[[:space:]]*:[[:space:]]*"ghcr\.io/zookanalytics/bmad-orchestrator/devcontainer:[^"]+"' .devcontainer/devcontainer.json | head -1 | sed -E 's/.*"image"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/' || true)
+          IMAGE=$(grep -oE '"image"[[:space:]]*:[[:space:]]*"ghcr\.io/zookanalytics/agent-env/devcontainer:[^"]+"' .devcontainer/devcontainer.json | head -1 | sed -E 's/.*"image"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/' || true)
           if [ -z "$IMAGE" ]; then
-            echo "❌ Could not locate an \"image\" field referencing ghcr.io/zookanalytics/bmad-orchestrator/devcontainer in .devcontainer/devcontainer.json"
+            echo "❌ Could not locate an \"image\" field referencing ghcr.io/zookanalytics/agent-env/devcontainer in .devcontainer/devcontainer.json"
             exit 1
           fi
           # Strip any digest, then extract the trailing tag via a robust regex
@@ -99,7 +99,7 @@ jobs:
         run: pnpm -r test:coverage
 
       # Validate changeset package names match workspace packages.
-      # Catches typos like @bmad-orchestrator/foo vs @zookanalytics/foo early
+      # Catches typos like @agent-env/foo vs @zookanalytics/foo early
       # with a clear error message pointing to the exact file.
       - name: Validate changeset package names
         if: github.event_name == 'pull_request'

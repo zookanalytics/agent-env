@@ -136,9 +136,9 @@ export function getWorkspacesBaseDir(deps: Pick<FsDeps, 'homedir'> = defaultFsDe
 
 /**
  * Derive workspace name from repo and instance
- * @param repo - Repository name (e.g., "bmad-orch")
+ * @param repo - Repository name (e.g., "agent-env")
  * @param instance - Instance name (e.g., "auth")
- * @returns Workspace name (e.g., "bmad-orch-auth")
+ * @returns Workspace name (e.g., "agent-env-auth")
  * @throws If repo or instance contain invalid characters
  */
 export function deriveWorkspaceName(repo: string, instance: string): string {
@@ -149,8 +149,8 @@ export function deriveWorkspaceName(repo: string, instance: string): string {
 
 /**
  * Derive container name from workspace name
- * @param workspaceName - Workspace name (e.g., "bmad-orch-auth")
- * @returns Container name (e.g., "ae-bmad-orch-auth")
+ * @param workspaceName - Workspace name (e.g., "agent-env-auth")
+ * @returns Container name (e.g., "ae-agent-env-auth")
  */
 export function deriveContainerName(workspaceName: string): string {
   return `${CONTAINER_PREFIX}${workspaceName}`;
@@ -195,7 +195,7 @@ export function getWorkspacePathByName(
 
 /**
  * Create a new workspace folder with .agent-env directory
- * @param repo - Repository name (e.g., "bmad-orch")
+ * @param repo - Repository name (e.g., "agent-env")
  * @param instance - Instance name (e.g., "auth")
  * @returns WorkspacePath of the created workspace
  * @throws If workspace already exists
@@ -407,7 +407,7 @@ export type ResolveInstanceResult =
  * 5. If no match: return WORKSPACE_NOT_FOUND error
  *
  * @param instanceName - User-provided instance name (e.g., "auth")
- * @param repoSlug - Optional repo slug from Phase 1 (e.g., "bmad-orchestrator")
+ * @param repoSlug - Optional repo slug from Phase 1 (e.g., "agent-env")
  * @param deps - Injectable dependencies
  * @returns Resolved workspace name, or error
  */
@@ -418,7 +418,7 @@ export async function resolveInstance(
 ): Promise<ResolveInstanceResult> {
   const workspaces = await scanWorkspaces(deps.fsDeps);
 
-  // Strategy 0: Exact workspace name match (user typed full name like "bmad-orch-auth")
+  // Strategy 0: Exact workspace name match (user typed full name like "agent-env-auth")
   if (workspaces.includes(instanceName)) {
     return { found: true, workspaceName: instanceName };
   }

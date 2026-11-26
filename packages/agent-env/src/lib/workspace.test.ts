@@ -54,7 +54,7 @@ afterEach(async () => {
 
 describe('deriveWorkspaceName', () => {
   it('combines repo and instance with dash', () => {
-    expect(deriveWorkspaceName('bmad-orch', 'auth')).toBe('bmad-orch-auth');
+    expect(deriveWorkspaceName('agent-env', 'auth')).toBe('agent-env-auth');
   });
 
   it('handles single-word names', () => {
@@ -88,13 +88,11 @@ describe('deriveWorkspaceName', () => {
 
 describe('deriveRepoSlug', () => {
   it('extracts slug from HTTPS URL with .git suffix', () => {
-    expect(deriveRepoSlug('https://github.com/user/bmad-orchestrator.git')).toBe(
-      'bmad-orchestrator'
-    );
+    expect(deriveRepoSlug('https://github.com/user/agent-env.git')).toBe('agent-env');
   });
 
   it('extracts slug from HTTPS URL without .git suffix', () => {
-    expect(deriveRepoSlug('https://github.com/user/bmad-orchestrator')).toBe('bmad-orchestrator');
+    expect(deriveRepoSlug('https://github.com/user/agent-env')).toBe('agent-env');
   });
 
   it('extracts slug from SSH URL with .git suffix', () => {
@@ -106,7 +104,7 @@ describe('deriveRepoSlug', () => {
   });
 
   it('handles trailing slashes', () => {
-    expect(deriveRepoSlug('https://github.com/user/bmad-orchestrator/')).toBe('bmad-orchestrator');
+    expect(deriveRepoSlug('https://github.com/user/agent-env/')).toBe('agent-env');
   });
 
   it('handles nested paths in HTTPS URLs', () => {
@@ -218,7 +216,7 @@ describe('compressSlug', () => {
 
 describe('deriveContainerName', () => {
   it('prefixes workspace name with ae-', () => {
-    expect(deriveContainerName('bmad-orch-auth')).toBe('ae-bmad-orch-auth');
+    expect(deriveContainerName('agent-env-auth')).toBe('ae-agent-env-auth');
   });
 });
 
@@ -233,11 +231,11 @@ describe('getWorkspacesBaseDir', () => {
 describe('getWorkspacePath', () => {
   it('resolves all paths correctly', () => {
     const deps = { homedir: () => '/home/testuser' };
-    const result = getWorkspacePath('bmad-orch', 'auth', deps);
+    const result = getWorkspacePath('agent-env', 'auth', deps);
 
-    expect(result.name).toBe('bmad-orch-auth');
+    expect(result.name).toBe('agent-env-auth');
     expect(result.root).toBe(
-      join('/home/testuser', AGENT_ENV_DIR, WORKSPACES_DIR, 'bmad-orch-auth')
+      join('/home/testuser', AGENT_ENV_DIR, WORKSPACES_DIR, 'agent-env-auth')
     );
     expect(result.agentEnvDir).toBe(join(result.root, AGENT_ENV_DIR));
     expect(result.stateFile).toBe(join(result.root, AGENT_ENV_DIR, STATE_FILE));
@@ -247,10 +245,10 @@ describe('getWorkspacePath', () => {
 describe('getWorkspacePathByName', () => {
   it('resolves paths from workspace name', () => {
     const deps = { homedir: () => '/home/testuser' };
-    const result = getWorkspacePathByName('bmad-orch-auth', deps);
+    const result = getWorkspacePathByName('agent-env-auth', deps);
 
-    expect(result.name).toBe('bmad-orch-auth');
-    expect(result.root).toContain('bmad-orch-auth');
+    expect(result.name).toBe('agent-env-auth');
+    expect(result.root).toContain('agent-env-auth');
     expect(result.stateFile).toContain(STATE_FILE);
   });
 });
@@ -260,9 +258,9 @@ describe('getWorkspacePathByName', () => {
 describe('createWorkspace', () => {
   it('creates workspace folder at expected path', async () => {
     const deps = createTestDeps(tempDir);
-    const wsPath = await createWorkspace('bmad-orch', 'auth', deps);
+    const wsPath = await createWorkspace('agent-env', 'auth', deps);
 
-    expect(wsPath.name).toBe('bmad-orch-auth');
+    expect(wsPath.name).toBe('agent-env-auth');
 
     // Verify directory was created
     const stats = await stat(wsPath.root);
@@ -275,9 +273,9 @@ describe('createWorkspace', () => {
 
   it('creates workspace at ~/.agent-env/workspaces/<repo>-<instance>/', async () => {
     const deps = createTestDeps(tempDir);
-    const wsPath = await createWorkspace('bmad-orch', 'auth', deps);
+    const wsPath = await createWorkspace('agent-env', 'auth', deps);
 
-    const expectedPath = join(tempDir, AGENT_ENV_DIR, WORKSPACES_DIR, 'bmad-orch-auth');
+    const expectedPath = join(tempDir, AGENT_ENV_DIR, WORKSPACES_DIR, 'agent-env-auth');
     expect(wsPath.root).toBe(expectedPath);
   });
 
@@ -285,13 +283,13 @@ describe('createWorkspace', () => {
     const deps = createTestDeps(tempDir);
 
     // Create first time
-    await createWorkspace('bmad-orch', 'auth', deps);
+    await createWorkspace('agent-env', 'auth', deps);
 
     // Second create should throw
-    await expect(createWorkspace('bmad-orch', 'auth', deps)).rejects.toThrowError(/already exists/);
+    await expect(createWorkspace('agent-env', 'auth', deps)).rejects.toThrowError(/already exists/);
 
     // Also check for the specific error code
-    const promise = createWorkspace('bmad-orch', 'auth', deps);
+    const promise = createWorkspace('agent-env', 'auth', deps);
     await expect(promise).rejects.toHaveProperty('code', 'WORKSPACE_ALREADY_EXISTS');
   });
 
@@ -308,9 +306,9 @@ describe('createWorkspace', () => {
 describe('workspaceExists', () => {
   it('returns true for existing workspace', async () => {
     const deps = createTestDeps(tempDir);
-    await createWorkspace('bmad-orch', 'auth', deps);
+    await createWorkspace('agent-env', 'auth', deps);
 
-    const exists = await workspaceExists('bmad-orch', 'auth', deps);
+    const exists = await workspaceExists('agent-env', 'auth', deps);
     expect(exists).toBe(true);
   });
 
@@ -444,27 +442,24 @@ describe('resolveRepo', () => {
 
   it('resolves explicit slug from --repo flag (plain string)', async () => {
     const executor = mockExecutor();
-    const result = await resolveRepo({ repo: 'bmad-orchestrator' }, executor);
+    const result = await resolveRepo({ repo: 'agent-env' }, executor);
 
-    expect(result).toEqual({ resolved: true, repoSlug: 'bmad-orchestrator' });
+    expect(result).toEqual({ resolved: true, repoSlug: 'agent-env' });
     expect(executor).not.toHaveBeenCalled();
   });
 
   it('lowercases explicit slug from --repo flag', async () => {
     const executor = mockExecutor();
-    const result = await resolveRepo({ repo: 'BMAD-Orchestrator' }, executor);
+    const result = await resolveRepo({ repo: 'Agent-Env' }, executor);
 
-    expect(result).toEqual({ resolved: true, repoSlug: 'bmad-orchestrator' });
+    expect(result).toEqual({ resolved: true, repoSlug: 'agent-env' });
   });
 
   it('resolves explicit URL from --repo flag via deriveRepoSlug', async () => {
     const executor = mockExecutor();
-    const result = await resolveRepo(
-      { repo: 'https://github.com/user/bmad-orchestrator.git' },
-      executor
-    );
+    const result = await resolveRepo({ repo: 'https://github.com/user/agent-env.git' }, executor);
 
-    expect(result).toEqual({ resolved: true, repoSlug: 'bmad-orchestrator' });
+    expect(result).toEqual({ resolved: true, repoSlug: 'agent-env' });
     expect(executor).not.toHaveBeenCalled();
   });
 
@@ -629,15 +624,15 @@ describe('resolveInstance', () => {
   }
 
   it('finds workspace by repo-scoped lookup when repoSlug is provided', async () => {
-    await createWorkspaceWithState('bmad-orchestrator-auth', {
+    await createWorkspaceWithState('agent-env-auth', {
       instance: 'auth',
-      repoSlug: 'bmad-orchestrator',
+      repoSlug: 'agent-env',
     });
     const deps = createResolveDeps();
 
-    const result = await resolveInstance('auth', 'bmad-orchestrator', deps);
+    const result = await resolveInstance('auth', 'agent-env', deps);
 
-    expect(result).toEqual({ found: true, workspaceName: 'bmad-orchestrator-auth' });
+    expect(result).toEqual({ found: true, workspaceName: 'agent-env-auth' });
   });
 
   it('falls through to global search when scoped lookup fails', async () => {
@@ -655,21 +650,21 @@ describe('resolveInstance', () => {
   });
 
   it('finds unique instance globally when no repoSlug provided', async () => {
-    await createWorkspaceWithState('bmad-orchestrator-auth', {
+    await createWorkspaceWithState('agent-env-auth', {
       instance: 'auth',
-      repoSlug: 'bmad-orchestrator',
+      repoSlug: 'agent-env',
     });
     const deps = createResolveDeps();
 
     const result = await resolveInstance('auth', undefined, deps);
 
-    expect(result).toEqual({ found: true, workspaceName: 'bmad-orchestrator-auth' });
+    expect(result).toEqual({ found: true, workspaceName: 'agent-env-auth' });
   });
 
   it('returns AMBIGUOUS_INSTANCE when multiple repos have same instance name', async () => {
-    await createWorkspaceWithState('bmad-orchestrator-auth', {
+    await createWorkspaceWithState('agent-env-auth', {
       instance: 'auth',
-      repoSlug: 'bmad-orchestrator',
+      repoSlug: 'agent-env',
     });
     await createWorkspaceWithState('awesome-cli-auth', {
       instance: 'auth',
@@ -682,15 +677,15 @@ describe('resolveInstance', () => {
     expect(result.found).toBe(false);
     if (result.found) throw new Error('Expected not found');
     expect(result.error.code).toBe('AMBIGUOUS_INSTANCE');
-    expect(result.error.message).toContain('bmad-orchestrator');
+    expect(result.error.message).toContain('agent-env');
     expect(result.error.message).toContain('awesome-cli');
     expect(result.error.suggestion).toContain('--repo');
   });
 
   it('resolves ambiguity when repoSlug is provided', async () => {
-    await createWorkspaceWithState('bmad-orchestrator-auth', {
+    await createWorkspaceWithState('agent-env-auth', {
       instance: 'auth',
-      repoSlug: 'bmad-orchestrator',
+      repoSlug: 'agent-env',
     });
     await createWorkspaceWithState('awesome-cli-auth', {
       instance: 'auth',
@@ -698,9 +693,9 @@ describe('resolveInstance', () => {
     });
     const deps = createResolveDeps();
 
-    const result = await resolveInstance('auth', 'bmad-orchestrator', deps);
+    const result = await resolveInstance('auth', 'agent-env', deps);
 
-    expect(result).toEqual({ found: true, workspaceName: 'bmad-orchestrator-auth' });
+    expect(result).toEqual({ found: true, workspaceName: 'agent-env-auth' });
   });
 
   it('returns WORKSPACE_NOT_FOUND when instance does not exist', async () => {
@@ -715,13 +710,13 @@ describe('resolveInstance', () => {
   });
 
   it('returns WORKSPACE_NOT_FOUND when instance does not exist for given repo', async () => {
-    await createWorkspaceWithState('bmad-orchestrator-web', {
+    await createWorkspaceWithState('agent-env-web', {
       instance: 'web',
-      repoSlug: 'bmad-orchestrator',
+      repoSlug: 'agent-env',
     });
     const deps = createResolveDeps();
 
-    const result = await resolveInstance('auth', 'bmad-orchestrator', deps);
+    const result = await resolveInstance('auth', 'agent-env', deps);
 
     expect(result.found).toBe(false);
     if (result.found) throw new Error('Expected not found');
@@ -734,15 +729,15 @@ describe('resolveInstance', () => {
     await mkdir(join(wsRoot, AGENT_ENV_DIR), { recursive: true });
 
     // Create valid workspace
-    await createWorkspaceWithState('bmad-orchestrator-auth', {
+    await createWorkspaceWithState('agent-env-auth', {
       instance: 'auth',
-      repoSlug: 'bmad-orchestrator',
+      repoSlug: 'agent-env',
     });
     const deps = createResolveDeps();
 
     const result = await resolveInstance('auth', undefined, deps);
 
-    expect(result).toEqual({ found: true, workspaceName: 'bmad-orchestrator-auth' });
+    expect(result).toEqual({ found: true, workspaceName: 'agent-env-auth' });
   });
 
   it('skips workspaces with invalid JSON in state.json', async () => {
@@ -751,28 +746,28 @@ describe('resolveInstance', () => {
     await mkdir(agentEnvDir, { recursive: true });
     await writeFile(join(agentEnvDir, STATE_FILE), 'not-json', 'utf-8');
 
-    await createWorkspaceWithState('bmad-orchestrator-auth', {
+    await createWorkspaceWithState('agent-env-auth', {
       instance: 'auth',
-      repoSlug: 'bmad-orchestrator',
+      repoSlug: 'agent-env',
     });
     const deps = createResolveDeps();
 
     const result = await resolveInstance('auth', undefined, deps);
 
-    expect(result).toEqual({ found: true, workspaceName: 'bmad-orchestrator-auth' });
+    expect(result).toEqual({ found: true, workspaceName: 'agent-env-auth' });
   });
 
   it('resolves when cwd repo has no match but another repo does (AC #5)', async () => {
-    // Only bmad-orchestrator has "auth" instance
-    await createWorkspaceWithState('bmad-orchestrator-auth', {
+    // Only agent-env has "auth" instance
+    await createWorkspaceWithState('agent-env-auth', {
       instance: 'auth',
-      repoSlug: 'bmad-orchestrator',
+      repoSlug: 'agent-env',
     });
     const deps = createResolveDeps();
 
     // Searching with awesome-cli slug (cwd repo) → scoped miss → global find
     const result = await resolveInstance('auth', 'awesome-cli', deps);
 
-    expect(result).toEqual({ found: true, workspaceName: 'bmad-orchestrator-auth' });
+    expect(result).toEqual({ found: true, workspaceName: 'agent-env-auth' });
   });
 });

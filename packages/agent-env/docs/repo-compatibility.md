@@ -2,7 +2,7 @@
 
 `agent-env create` does **not** run a repo's own devcontainer image. It always
 substitutes the agent-env **managed image**
-(`ghcr.io/zookanalytics/bmad-orchestrator/devcontainer`) and merges the repo's
+(`ghcr.io/zookanalytics/agent-env/devcontainer`) and merges the repo's
 `.devcontainer/devcontainer.json` on top of it. A handful of fields are therefore
 **forced** by the merge, because a repo's value for them is tuned for the repo's
 own image and is invalid once the image is swapped:

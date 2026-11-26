@@ -55,9 +55,9 @@ if (
 
 /** Resolved workspace path information */
 export interface WorkspacePath {
-  /** Full absolute path to workspace folder (e.g., ~/.agent-env/workspaces/bmad-orch-auth) */
+  /** Full absolute path to workspace folder (e.g., ~/.agent-env/workspaces/agent-env-auth) */
   root: string;
-  /** Workspace name derived from repo+instance (e.g., bmad-orch-auth) */
+  /** Workspace name derived from repo+instance (e.g., agent-env-auth) */
   name: string;
   /** Path to .agent-env directory within workspace */
   agentEnvDir: string;
@@ -69,7 +69,7 @@ export interface WorkspacePath {
 export interface InstanceState {
   /** User-chosen instance name (e.g., "auth") — max 20 chars */
   instance: string;
-  /** Repo slug derived from git remote URL (e.g., "bmad-orchestrator") — max 39 chars */
+  /** Repo slug derived from git remote URL (e.g., "agent-env") — max 39 chars */
   repoSlug: string;
   /** Full git remote URL */
   repoUrl: string;
@@ -81,7 +81,7 @@ export interface InstanceState {
   lastRebuilt?: string;
   /** User-provided description, null if not set */
   purpose: string | null;
-  /** Container name (e.g., "ae-bmad-orchestrator-auth") */
+  /** Container name (e.g., "ae-agent-env-auth") */
   containerName: string;
   /** Whether the repo had its own .devcontainer/devcontainer.json at creation time */
   repoConfigDetected: boolean;

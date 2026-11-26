@@ -58,8 +58,8 @@ describe('MenuContainer', () => {
     const driftState: VersionDriftState = {
       ...neutralState(),
       imageDrift: {
-        configuredImage: 'ghcr.io/zookanalytics/bmad-orchestrator/devcontainer' + ':' + '1.0.0',
-        expectedImage: 'ghcr.io/zookanalytics/bmad-orchestrator/devcontainer' + ':' + '1.2.0',
+        configuredImage: 'ghcr.io/zookanalytics/agent-env/devcontainer' + ':' + '1.0.0',
+        expectedImage: 'ghcr.io/zookanalytics/agent-env/devcontainer' + ':' + '1.2.0',
       },
     };
     const detectDriftStateFn = vi.fn().mockResolvedValue(driftState);

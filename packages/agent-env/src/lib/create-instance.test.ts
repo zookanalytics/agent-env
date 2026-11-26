@@ -209,14 +209,14 @@ describe('createInstance', () => {
   it('creates instance successfully with HTTPS URL', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected success');
 
     expect(result.workspacePath).not.toBeNull();
-    expect(result.workspacePath.name).toBe('bmad-orch-auth');
-    expect(result.containerName).toBe('ae-bmad-orch-auth');
+    expect(result.workspacePath.name).toBe('agent-env-auth');
+    expect(result.containerName).toBe('ae-agent-env-auth');
   });
 
   it('creates instance successfully with SSH URL', async () => {
@@ -234,11 +234,11 @@ describe('createInstance', () => {
   it('calls git clone with correct arguments and timeout', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(deps.executor).toHaveBeenCalledWith(
       'git',
-      expect.arrayContaining(['clone', 'https://github.com/user/bmad-orch.git']),
+      expect.arrayContaining(['clone', 'https://github.com/user/agent-env.git']),
       expect.objectContaining({ timeout: 120_000 })
     );
   });
@@ -246,16 +246,16 @@ describe('createInstance', () => {
   it('calls devcontainerUp after successful clone with AGENT_INSTANCE and AGENT_ENV_PURPOSE', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps, {
+    await createInstance('auth', 'https://github.com/user/agent-env.git', deps, {
       purpose: 'JWT authentication',
     });
 
     expect(deps.container.devcontainerUp).toHaveBeenCalledWith(
-      expect.stringContaining('bmad-orch-auth'),
-      'ae-bmad-orch-auth',
+      expect.stringContaining('agent-env-auth'),
+      'ae-agent-env-auth',
       expect.objectContaining({
         remoteEnv: {
-          AGENT_INSTANCE: 'bmad-orch-auth',
+          AGENT_INSTANCE: 'agent-env-auth',
           AGENT_ENV_PURPOSE: 'JWT authentication',
         },
         configPath: expect.stringContaining(join('.agent-env', 'devcontainer.json')),
@@ -266,14 +266,14 @@ describe('createInstance', () => {
   it('passes empty string AGENT_ENV_PURPOSE in devcontainerUp remoteEnv when no purpose', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(deps.container.devcontainerUp).toHaveBeenCalledWith(
-      expect.stringContaining('bmad-orch-auth'),
-      'ae-bmad-orch-auth',
+      expect.stringContaining('agent-env-auth'),
+      'ae-agent-env-auth',
       expect.objectContaining({
         remoteEnv: {
-          AGENT_INSTANCE: 'bmad-orch-auth',
+          AGENT_INSTANCE: 'agent-env-auth',
           AGENT_ENV_PURPOSE: '',
         },
       })
@@ -283,7 +283,7 @@ describe('createInstance', () => {
   it('writes state.json after successful create', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected success');
@@ -291,9 +291,9 @@ describe('createInstance', () => {
     const stateContent = await readFile(result.workspacePath.stateFile, 'utf-8');
     const state = JSON.parse(stateContent);
     expect(state.instance).toBe('auth');
-    expect(state.repoSlug).toBe('bmad-orch');
-    expect(state.repoUrl).toBe('https://github.com/user/bmad-orch.git');
-    expect(state.containerName).toBe('ae-bmad-orch-auth');
+    expect(state.repoSlug).toBe('agent-env');
+    expect(state.repoUrl).toBe('https://github.com/user/agent-env.git');
+    expect(state.containerName).toBe('ae-agent-env-auth');
     expect(state.createdAt).toBeDefined();
   });
 
@@ -301,10 +301,10 @@ describe('createInstance', () => {
     const deps = createTestDeps(gitCloneSuccess);
 
     // First create succeeds
-    await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     // Second create should fail with INSTANCE_EXISTS
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('Expected failure');
@@ -312,7 +312,7 @@ describe('createInstance', () => {
     expect(result.error).not.toBeNull();
     expect(result.error.code).toBe('INSTANCE_EXISTS');
     expect(result.error.message).toContain("Instance 'auth' already exists");
-    expect(result.error.message).toContain('bmad-orch');
+    expect(result.error.message).toContain('agent-env');
   });
 
   it('returns GIT_ERROR when clone fails', async () => {
@@ -352,7 +352,7 @@ describe('createInstance', () => {
       tempDir,
       AGENT_ENV_DIR,
       WORKSPACES_DIR,
-      'bmad-orch-auth',
+      'agent-env-auth',
       AGENT_ENV_DIR
     );
     deps.workspaceFsDeps.mkdir = vi.fn().mockImplementation(async (path: string, opts?: object) => {
@@ -362,7 +362,7 @@ describe('createInstance', () => {
       return realMkdir(path, opts);
     }) as unknown as typeof mkdir;
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('Expected failure');
@@ -371,7 +371,7 @@ describe('createInstance', () => {
     expect(result.error.message).toContain('EACCES');
 
     // Workspace should not exist after rollback
-    const wsDir = join(tempDir, AGENT_ENV_DIR, WORKSPACES_DIR, 'bmad-orch-auth');
+    const wsDir = join(tempDir, AGENT_ENV_DIR, WORKSPACES_DIR, 'agent-env-auth');
     let exists = false;
     try {
       await stat(wsDir);
@@ -389,7 +389,7 @@ describe('createInstance', () => {
       .fn()
       .mockRejectedValue(new Error('EACCES: permission denied')) as unknown as typeof mkdir;
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('Expected failure');
@@ -409,7 +409,7 @@ describe('createInstance', () => {
       }),
     });
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('Expected failure');
@@ -426,10 +426,10 @@ describe('createInstance', () => {
       }),
     });
 
-    await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     // Workspace should be cleaned up
-    const wsDir = join(tempDir, AGENT_ENV_DIR, WORKSPACES_DIR, 'bmad-orch-auth');
+    const wsDir = join(tempDir, AGENT_ENV_DIR, WORKSPACES_DIR, 'agent-env-auth');
     let exists = false;
     try {
       await stat(wsDir);
@@ -466,7 +466,7 @@ describe('createInstance', () => {
       return originalExecutor(command, args);
     });
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     // Docker logs should be included in the returned error message
     expect(result.ok).toBe(false);
@@ -478,16 +478,16 @@ describe('createInstance', () => {
 
   it('returns CONTAINER_EXISTS when a container already exists for workspace path', async () => {
     const deps = createTestDeps(gitCloneSuccess, {
-      findContainerByWorkspaceLabel: vi.fn().mockResolvedValue('agenttools-bmad-orch-auth'),
+      findContainerByWorkspaceLabel: vi.fn().mockResolvedValue('agenttools-agent-env-auth'),
     });
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('Expected failure');
     expect(result.error.code).toBe('CONTAINER_EXISTS');
-    expect(result.error.message).toContain('agenttools-bmad-orch-auth');
-    expect(result.error.suggestion).toContain('docker rm -f agenttools-bmad-orch-auth');
+    expect(result.error.message).toContain('agenttools-agent-env-auth');
+    expect(result.error.suggestion).toContain('docker rm -f agenttools-agent-env-auth');
   });
 
   it('cleans up workspace when pre-flight container check finds conflict', async () => {
@@ -495,10 +495,10 @@ describe('createInstance', () => {
       findContainerByWorkspaceLabel: vi.fn().mockResolvedValue('stale-container'),
     });
 
-    await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     // Workspace should be cleaned up
-    const wsDir = join(tempDir, AGENT_ENV_DIR, WORKSPACES_DIR, 'bmad-orch-auth');
+    const wsDir = join(tempDir, AGENT_ENV_DIR, WORKSPACES_DIR, 'agent-env-auth');
     let exists = false;
     try {
       await stat(wsDir);
@@ -518,14 +518,14 @@ describe('createInstance', () => {
         containerId: null,
         error: {
           code: 'CONTAINER_ERROR',
-          message: "devcontainer up failed for 'ae-bmad-orch-auth':\n   name is already in use",
+          message: "devcontainer up failed for 'ae-agent-env-auth':\n   name is already in use",
           suggestion:
             'A container with this name already exists. Use `docker ps -a` to find it, then `docker rm -f <name>` to remove it and retry.',
         },
       }),
     });
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('Expected failure');
@@ -539,7 +539,7 @@ describe('createInstance', () => {
       findContainerByWorkspaceLabel: vi.fn().mockResolvedValue(null),
     });
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(true);
     expect(deps.container.devcontainerUp).toHaveBeenCalled();
@@ -560,7 +560,7 @@ describe('createInstance', () => {
   it('copies managed assets via copyManagedAssets', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     // copyManagedAssets uses devcontainerFsDeps.cp to copy baseline assets (excluding devcontainer.json)
     expect(deps.devcontainerFsDeps.cp).toHaveBeenCalled();
@@ -569,7 +569,7 @@ describe('createInstance', () => {
   it('writes generated config to .agent-env/devcontainer.json via mergeDeps', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     // writeGeneratedConfig uses mergeDeps.writeFile then mergeDeps.rename
     // The final config should end up at .agent-env/devcontainer.json
@@ -585,7 +585,7 @@ describe('createInstance', () => {
   it('always passes configPath to devcontainerUp pointing to .agent-env/devcontainer.json', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(deps.container.devcontainerUp).toHaveBeenCalledWith(
       expect.any(String),
@@ -605,17 +605,17 @@ describe('createInstance', () => {
         error: null,
       }),
       // Simulate repo's devcontainer.json having --name=agenttools-*
-      getContainerNameById: vi.fn().mockResolvedValue('agenttools-bmad-orch'),
+      getContainerNameById: vi.fn().mockResolvedValue('agenttools-agent-env'),
     };
 
     const deps = createTestDeps(gitCloneSuccess, containerOverrides);
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected success');
     // The returned containerName should be the discovered one, not the derived ae-* one
-    expect(result.containerName).toBe('agenttools-bmad-orch');
+    expect(result.containerName).toBe('agenttools-agent-env');
     // Should have called getContainerNameById with the containerId
     expect(deps.container.getContainerNameById).toHaveBeenCalledWith('container-abc123');
   });
@@ -634,12 +634,12 @@ describe('createInstance', () => {
 
     const deps = createTestDeps(gitCloneSuccess, containerOverrides);
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected success');
     // Falls back to derived name
-    expect(result.containerName).toBe('ae-bmad-orch-auth');
+    expect(result.containerName).toBe('ae-agent-env-auth');
   });
 
   it('writes discovered container name to state.json', async () => {
@@ -655,7 +655,7 @@ describe('createInstance', () => {
 
     const deps = createTestDeps(gitCloneSuccess, containerOverrides);
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected success');
@@ -669,7 +669,7 @@ describe('createInstance', () => {
   it('sets repoConfigDetected to false when repo has no devcontainer config', async () => {
     const deps = createTestDeps(gitCloneSuccess, {}, false);
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected success');
@@ -682,7 +682,7 @@ describe('createInstance', () => {
   it('sets repoConfigDetected to true when repo has its own devcontainer config', async () => {
     const deps = createTestDeps(gitCloneSuccess, {}, true);
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected success');
@@ -711,7 +711,7 @@ describe('createInstance', () => {
         return result;
       });
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected success');
@@ -725,7 +725,7 @@ describe('createInstance', () => {
   it('writes purpose to state.json when --purpose is provided', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps, {
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps, {
       purpose: 'JWT authentication',
     });
 
@@ -740,7 +740,7 @@ describe('createInstance', () => {
   it('writes purpose as null to state.json when --purpose is not provided', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected success');
@@ -753,7 +753,7 @@ describe('createInstance', () => {
   it('includes AGENT_ENV_PURPOSE in generated config', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps, {
+    await createInstance('auth', 'https://github.com/user/agent-env.git', deps, {
       purpose: 'JWT authentication',
     });
 
@@ -776,7 +776,7 @@ describe('createInstance', () => {
     const deps = createTestDeps(gitCloneSuccess);
     const tooLongName = 'this-name-is-way-too-long';
 
-    const result = await createInstance(tooLongName, 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance(tooLongName, 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('Expected failure');
@@ -791,7 +791,7 @@ describe('createInstance', () => {
     const deps = createTestDeps(gitCloneSuccess);
     const exactName = 'a'.repeat(20);
 
-    const result = await createInstance(exactName, 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance(exactName, 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(true);
   });
@@ -799,7 +799,7 @@ describe('createInstance', () => {
   it('accepts short instance name', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     expect(result.ok).toBe(true);
   });
@@ -808,7 +808,7 @@ describe('createInstance', () => {
     const deps = createTestDeps(gitCloneSuccess);
     const tooLongPurpose = 'x'.repeat(201);
 
-    const result = await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps, {
+    const result = await createInstance('auth', 'https://github.com/user/agent-env.git', deps, {
       purpose: tooLongPurpose,
     });
 
@@ -824,7 +824,7 @@ describe('createInstance', () => {
   it('sets AGENT_ENV_PURPOSE to empty string in generated config when no purpose', async () => {
     const deps = createTestDeps(gitCloneSuccess);
 
-    await createInstance('auth', 'https://github.com/user/bmad-orch.git', deps);
+    await createInstance('auth', 'https://github.com/user/agent-env.git', deps);
 
     const writeFileCalls = (deps.mergeDeps.writeFile as ReturnType<typeof vi.fn>).mock.calls;
     const configWriteCall = writeFileCalls.find(
@@ -1003,12 +1003,12 @@ describe('attachToInstance', () => {
       exitCode: 0,
     } satisfies ExecuteResult);
 
-    const result = await attachToInstance('ae-bmad-orch-auth', executor);
+    const result = await attachToInstance('ae-agent-env-auth', executor);
 
     expect(result.ok).toBe(true);
     expect(executor).toHaveBeenCalledWith(
       'docker',
-      ['exec', '-it', 'ae-bmad-orch-auth', 'bash', '-c', '/home/node/.local/bin/tmux-session'],
+      ['exec', '-it', 'ae-agent-env-auth', 'bash', '-c', '/home/node/.local/bin/tmux-session'],
       { stdio: 'inherit' }
     );
   });
@@ -1038,7 +1038,7 @@ describe('attachToInstance', () => {
       exitCode: 127,
     } satisfies ExecuteResult);
 
-    const result = await attachToInstance('ae-bmad-orch-auth', executor);
+    const result = await attachToInstance('ae-agent-env-auth', executor);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('Expected failure');

@@ -236,8 +236,8 @@ describe('list command --json', () => {
       const instances = [
         makeInstance({
           name: 'auth',
-          repoSlug: 'bmad-orchestrator',
-          repoUrl: 'https://github.com/user/bmad-orchestrator.git',
+          repoSlug: 'agent-env',
+          repoUrl: 'https://github.com/user/agent-env.git',
         }),
       ];
       mockListInstances.mockResolvedValue(makeSuccessResult(instances));
@@ -246,8 +246,8 @@ describe('list command --json', () => {
 
       const output = getCapturedJson();
       const instance = output.data?.[0];
-      expect(instance).toHaveProperty('repoSlug', 'bmad-orchestrator');
-      expect(instance).toHaveProperty('repoUrl', 'https://github.com/user/bmad-orchestrator.git');
+      expect(instance).toHaveProperty('repoSlug', 'agent-env');
+      expect(instance).toHaveProperty('repoUrl', 'https://github.com/user/agent-env.git');
     });
 
     it('does not include extra fields beyond the contract', async () => {
@@ -376,10 +376,10 @@ describe('list command --json', () => {
     it('passes repoFilter to listInstances when --repo is provided', async () => {
       mockListInstances.mockResolvedValue(makeSuccessResult([]));
 
-      await listCommand.parseAsync(['--json', '--repo', 'bmad-orchestrator'], { from: 'user' });
+      await listCommand.parseAsync(['--json', '--repo', 'agent-env'], { from: 'user' });
 
       expect(mockListInstances).toHaveBeenCalledWith(undefined, {
-        repoFilter: 'bmad-orchestrator',
+        repoFilter: 'agent-env',
       });
     });
 

@@ -82,7 +82,7 @@ describe('AC2: Trusted Publishing (OIDC) documentation (FR29, FR30)', () => {
 
   it('documents the linked repository', () => {
     const raw = loadWorkflowRaw();
-    expect(raw).toContain('Repository: ZookAnalytics/bmad-orchestrator');
+    expect(raw).toContain('Repository: ZookAnalytics/agent-env');
   });
 
   it('documents the linked workflow name', () => {

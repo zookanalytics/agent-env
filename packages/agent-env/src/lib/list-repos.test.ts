@@ -76,21 +76,17 @@ function mockStateFsDeps(states: Record<string, InstanceState>) {
 describe('listRepos', () => {
   describe('with multiple repos (AC: #1)', () => {
     it('aggregates repos from workspaces and returns sorted by slug', async () => {
-      const wsFsDeps = mockFsDeps([
-        'bmad-orchestrator-auth',
-        'bmad-orchestrator-api',
-        'awesome-cli-dev',
-      ]);
+      const wsFsDeps = mockFsDeps(['agent-env-auth', 'agent-env-api', 'awesome-cli-dev']);
       const stateFsDeps = mockStateFsDeps({
-        'bmad-orchestrator-auth': makeState({
+        'agent-env-auth': makeState({
           instance: 'auth',
-          repoSlug: 'bmad-orchestrator',
-          repoUrl: 'https://github.com/user/bmad-orchestrator.git',
+          repoSlug: 'agent-env',
+          repoUrl: 'https://github.com/user/agent-env.git',
         }),
-        'bmad-orchestrator-api': makeState({
+        'agent-env-api': makeState({
           instance: 'api',
-          repoSlug: 'bmad-orchestrator',
-          repoUrl: 'https://github.com/user/bmad-orchestrator.git',
+          repoSlug: 'agent-env',
+          repoUrl: 'https://github.com/user/agent-env.git',
         }),
         'awesome-cli-dev': makeState({
           instance: 'dev',
@@ -108,13 +104,13 @@ describe('listRepos', () => {
       expect(result.repos).toHaveLength(2);
 
       // Sorted alphabetically by slug
-      expect(result.repos[0].slug).toBe('awesome-cli');
-      expect(result.repos[0].url).toBe('https://github.com/user/awesome-cli.git');
-      expect(result.repos[0].instanceCount).toBe(1);
+      expect(result.repos[0].slug).toBe('agent-env');
+      expect(result.repos[0].url).toBe('https://github.com/user/agent-env.git');
+      expect(result.repos[0].instanceCount).toBe(2);
 
-      expect(result.repos[1].slug).toBe('bmad-orchestrator');
-      expect(result.repos[1].url).toBe('https://github.com/user/bmad-orchestrator.git');
-      expect(result.repos[1].instanceCount).toBe(2);
+      expect(result.repos[1].slug).toBe('awesome-cli');
+      expect(result.repos[1].url).toBe('https://github.com/user/awesome-cli.git');
+      expect(result.repos[1].instanceCount).toBe(1);
     });
   });
 
@@ -133,13 +129,13 @@ describe('listRepos', () => {
 
   describe('dynamic registry (AC: #3)', () => {
     it('excludes repos when all their instances are removed', async () => {
-      // Only bmad-orchestrator instances exist — awesome-cli has been removed
-      const wsFsDeps = mockFsDeps(['bmad-orchestrator-auth']);
+      // Only agent-env instances exist — awesome-cli has been removed
+      const wsFsDeps = mockFsDeps(['agent-env-auth']);
       const stateFsDeps = mockStateFsDeps({
-        'bmad-orchestrator-auth': makeState({
+        'agent-env-auth': makeState({
           instance: 'auth',
-          repoSlug: 'bmad-orchestrator',
-          repoUrl: 'https://github.com/user/bmad-orchestrator.git',
+          repoSlug: 'agent-env',
+          repoUrl: 'https://github.com/user/agent-env.git',
         }),
       });
 
@@ -150,7 +146,7 @@ describe('listRepos', () => {
 
       assertSuccess(result);
       expect(result.repos).toHaveLength(1);
-      expect(result.repos[0].slug).toBe('bmad-orchestrator');
+      expect(result.repos[0].slug).toBe('agent-env');
       // awesome-cli does NOT appear since its workspaces have been removed
     });
   });

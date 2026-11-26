@@ -1,6 +1,6 @@
 # agent-env
 
-[![Publish](https://github.com/ZookAnalytics/bmad-orchestrator/actions/workflows/publish.yml/badge.svg?branch=main)](https://github.com/ZookAnalytics/bmad-orchestrator/actions/workflows/publish.yml)
+[![Publish](https://github.com/ZookAnalytics/agent-env/actions/workflows/publish.yml/badge.svg?branch=main)](https://github.com/ZookAnalytics/agent-env/actions/workflows/publish.yml)
 [![npm version](https://img.shields.io/npm/v/@zookanalytics/agent-env)](https://www.npmjs.com/package/@zookanalytics/agent-env)
 
 Monorepo for agent-env: a CLI for creating isolated, AI-ready development environments, plus the devcontainer image those environments run on.

@@ -41,7 +41,7 @@ const DOT_DEVCONTAINER_JSON = '.devcontainer.json';
  * (see `getManagedImage()`), so upgrading the npm package reliably
  * triggers a matching image pull on the next rebuild.
  */
-export const MANAGED_IMAGE_REPO = 'ghcr.io/zookanalytics/bmad-orchestrator/devcontainer';
+export const MANAGED_IMAGE_REPO = 'ghcr.io/zookanalytics/agent-env/devcontainer';
 
 /**
  * Returns the managed image reference pinned to the current agent-env version,

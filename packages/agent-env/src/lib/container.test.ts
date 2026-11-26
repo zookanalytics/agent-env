@@ -131,7 +131,7 @@ describe('containerStatus', () => {
     });
     const lifecycle = createContainerLifecycle(executor);
 
-    const result = await lifecycle.containerStatus('ae-bmad-orch-auth');
+    const result = await lifecycle.containerStatus('ae-agent-env-auth');
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected success');
     expect(result.status).toBe('running');
@@ -148,7 +148,7 @@ describe('containerStatus', () => {
     });
     const lifecycle = createContainerLifecycle(executor);
 
-    const result = await lifecycle.containerStatus('ae-bmad-orch-auth');
+    const result = await lifecycle.containerStatus('ae-agent-env-auth');
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected success');
     expect(result.status).toBe('stopped');
@@ -438,7 +438,7 @@ describe('getContainerNameById', () => {
     const executor = mockExecutor({
       'docker inspect': {
         ok: true,
-        stdout: '/agenttools-bmad-orch\n',
+        stdout: '/agenttools-agent-env\n',
         stderr: '',
         exitCode: 0,
       },
@@ -446,7 +446,7 @@ describe('getContainerNameById', () => {
     const lifecycle = createContainerLifecycle(executor);
 
     const name = await lifecycle.getContainerNameById('container-id-123');
-    expect(name).toBe('agenttools-bmad-orch');
+    expect(name).toBe('agenttools-agent-env');
   });
 
   it('calls docker inspect with --format flag', async () => {
@@ -506,15 +506,15 @@ describe('findContainerByWorkspaceLabel', () => {
     const executor = mockExecutor({
       'docker ps': {
         ok: true,
-        stdout: 'agenttools-bmad-orch-strategy\n',
+        stdout: 'agenttools-agent-env-strategy\n',
         stderr: '',
         exitCode: 0,
       },
     });
     const lifecycle = createContainerLifecycle(executor);
 
-    const name = await lifecycle.findContainerByWorkspaceLabel('/workspaces/bmad-orch-strategy');
-    expect(name).toBe('agenttools-bmad-orch-strategy');
+    const name = await lifecycle.findContainerByWorkspaceLabel('/workspaces/agent-env-strategy');
+    expect(name).toBe('agenttools-agent-env-strategy');
   });
 
   it('returns null when no matching container exists', async () => {
@@ -528,7 +528,7 @@ describe('findContainerByWorkspaceLabel', () => {
     });
     const lifecycle = createContainerLifecycle(executor);
 
-    const name = await lifecycle.findContainerByWorkspaceLabel('/workspaces/bmad-orch-strategy');
+    const name = await lifecycle.findContainerByWorkspaceLabel('/workspaces/agent-env-strategy');
     expect(name).toBeNull();
   });
 
@@ -935,10 +935,10 @@ describe('containerStop', () => {
     });
     const lifecycle = createContainerLifecycle(executor);
 
-    await lifecycle.containerStop('ae-bmad-orch-auth');
+    await lifecycle.containerStop('ae-agent-env-auth');
     expect(executor).toHaveBeenCalledWith(
       'docker',
-      ['stop', 'ae-bmad-orch-auth'],
+      ['stop', 'ae-agent-env-auth'],
       expect.objectContaining({ timeout: DOCKER_STOP_TIMEOUT })
     );
   });
@@ -1061,10 +1061,10 @@ describe('dockerPull', () => {
       // Suggestion must contain workflow URL, packages URL, --no-pull mention,
       // and the AC15 conditional clause verbatim.
       expect(result.error.suggestion).toContain(
-        'https://github.com/ZookAnalytics/bmad-orchestrator/actions/workflows/publish-image.yml'
+        'https://github.com/ZookAnalytics/agent-env/actions/workflows/publish-image.yml'
       );
       expect(result.error.suggestion).toContain(
-        'https://github.com/ZookAnalytics/bmad-orchestrator/pkgs/container/bmad-orchestrator%2Fdevcontainer'
+        'https://github.com/ZookAnalytics/agent-env/pkgs/container/agent-env%2Fdevcontainer'
       );
       expect(result.error.suggestion).toContain('--no-pull');
       expect(result.error.suggestion).toContain(
@@ -1393,10 +1393,10 @@ describe('containerRemove', () => {
     });
     const lifecycle = createContainerLifecycle(executor);
 
-    await lifecycle.containerRemove('ae-bmad-orch-auth');
+    await lifecycle.containerRemove('ae-agent-env-auth');
     expect(executor).toHaveBeenCalledWith(
       'docker',
-      ['rm', 'ae-bmad-orch-auth'],
+      ['rm', 'ae-agent-env-auth'],
       expect.objectContaining({ timeout: DOCKER_RM_TIMEOUT })
     );
   });

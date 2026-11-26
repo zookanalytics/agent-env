@@ -161,12 +161,12 @@ describe('getTmuxStatus', () => {
         stateFile,
         JSON.stringify({
           instance: 'epics',
-          repoSlug: 'bmad-orchestrator',
-          repoUrl: 'git@github.com:zookanalytics/bmad-orchestrator.git',
+          repoSlug: 'agent-env',
+          repoUrl: 'git@github.com:zookanalytics/agent-env.git',
           createdAt: '2026-02-15T09:13:56.366Z',
           lastAttached: '2026-02-15T09:13:56.366Z',
           purpose: 'Epic 6 implementation',
-          containerName: 'ae-bmad-orchestrator-epics',
+          containerName: 'ae-agent-env-epics',
           configSource: 'repo',
         })
       );

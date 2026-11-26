@@ -15,7 +15,7 @@ import { getWorkspacePathByName, scanWorkspaces } from './workspace.js';
 
 /** Aggregated information about a tracked repository */
 export interface RepoInfo {
-  /** Repo slug derived from git remote URL (e.g., "bmad-orchestrator") */
+  /** Repo slug derived from git remote URL (e.g., "agent-env") */
   slug: string;
   /** Full git remote URL */
   url: string;
