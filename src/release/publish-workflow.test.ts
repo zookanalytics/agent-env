@@ -16,7 +16,7 @@ import { CHANGESET_DIR, PROJECT_ROOT } from './changeset-test-utils.js';
  * - Trusted Publishing (OIDC) via id-token: write permission
  * - Explicit minimal permissions (NFR2)
  * - Concurrency queue with cancel-in-progress: false (FR15)
- * - changesets/action@v1 integration
+ * - changesets/action integration
  * - GitHub release creation (FR8, NFR10)
  */
 
@@ -129,35 +129,35 @@ describe('publish workflow concurrency (FR15)', () => {
 });
 
 describe('publish workflow changesets/action configuration', () => {
-  it('includes changesets/action@v1 step', () => {
+  it('includes SHA-pinned changesets/action step', () => {
     const workflow = loadWorkflow();
     const changesetsStep = workflow.jobs.publish.steps.find(
       (s) => s.uses && s.uses.startsWith('changesets/action@')
     );
     expect(changesetsStep).toBeDefined();
-    expect(changesetsStep?.uses).toBe('changesets/action@v1');
+    expect(changesetsStep?.uses).toMatch(/^changesets\/action@[0-9a-f]{40}$/);
   });
 
   it('configures publish command as pnpm changeset publish', () => {
     const workflow = loadWorkflow();
-    const changesetsStep = workflow.jobs.publish.steps.find(
-      (s) => s.uses === 'changesets/action@v1'
+    const changesetsStep = workflow.jobs.publish.steps.find((s) =>
+      s.uses?.startsWith('changesets/action@')
     );
     expect(changesetsStep?.with?.publish).toBe('pnpm changeset publish');
   });
 
   it('passes GITHUB_TOKEN for PR creation', () => {
     const workflow = loadWorkflow();
-    const changesetsStep = workflow.jobs.publish.steps.find(
-      (s) => s.uses === 'changesets/action@v1'
+    const changesetsStep = workflow.jobs.publish.steps.find((s) =>
+      s.uses?.startsWith('changesets/action@')
     );
     expect(changesetsStep?.env?.GITHUB_TOKEN).toBe('${{ secrets.GITHUB_TOKEN }}');
   });
 
   it('enables npm provenance for Trusted Publishing (OIDC)', () => {
     const workflow = loadWorkflow();
-    const changesetsStep = workflow.jobs.publish.steps.find(
-      (s) => s.uses === 'changesets/action@v1'
+    const changesetsStep = workflow.jobs.publish.steps.find((s) =>
+      s.uses?.startsWith('changesets/action@')
     );
     expect(changesetsStep?.env?.NPM_CONFIG_PROVENANCE).toBe(true);
   });
@@ -172,13 +172,13 @@ describe('publish workflow setup steps', () => {
     expect(checkoutStep).toBeDefined();
   });
 
-  it('includes Node.js 22 setup with npm registry', () => {
+  it('includes Node.js 24 setup with npm registry', () => {
     const workflow = loadWorkflow();
     const nodeStep = workflow.jobs.publish.steps.find(
       (s) => s.uses && s.uses.startsWith('actions/setup-node@')
     );
     expect(nodeStep).toBeDefined();
-    expect(nodeStep?.with?.['node-version']).toBe('22');
+    expect(nodeStep?.with?.['node-version']).toBe('24');
     expect(nodeStep?.with?.['registry-url']).toBe('https://registry.npmjs.org');
   });
 
@@ -291,8 +291,8 @@ describe('publish workflow safety guards', () => {
 describe('publish workflow GitHub release automation (FR8, NFR10)', () => {
   it('enables createGithubReleases on changesets/action', () => {
     const workflow = loadWorkflow();
-    const changesetsStep = workflow.jobs.publish.steps.find(
-      (s) => s.uses === 'changesets/action@v1'
+    const changesetsStep = workflow.jobs.publish.steps.find((s) =>
+      s.uses?.startsWith('changesets/action@')
     );
     // YAML parses unquoted `true` as boolean true
     expect(changesetsStep?.with?.createGithubReleases).toBe(true);
