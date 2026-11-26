@@ -207,10 +207,6 @@ agent-env purpose <name> "Working on feature X"  # Set purpose
 
 ## Shell Completion
 
-Completion covers subcommands, options, instance names and repo slugs (the last two are read from `~/.agent-env/workspaces` at completion time), and defines the `aecd` helper (`cd` into an instance's host directory). There are two ways to install it.
-
-### Option 1: `eval` (simplest, always up to date)
-
 ```bash
 # ~/.zshrc (after compinit)
 eval "$(agent-env completion zsh)"
@@ -219,44 +215,9 @@ eval "$(agent-env completion zsh)"
 eval "$(agent-env completion bash)"
 ```
 
-`agent-env completion <shell>` prints a pre-generated script without loading the rest of the CLI, so this adds roughly the cost of starting Node (~30 ms) to shell startup. No caching wrapper is needed.
+This completes subcommands, options, instance names and repo slugs, and defines `aecd` (`cd` into an instance's host directory).
 
-### Option 2: static files (no process spawned)
-
-The same scripts ship in the package's `completions/` directory:
-
-| Shell | File                         |
-| ----- | ---------------------------- |
-| zsh   | `completions/_agent-env`     |
-| bash  | `completions/agent-env.bash` |
-
-Find the directory once with:
-
-```bash
-echo "$(npm root -g)/@zookanalytics/agent-env/completions"
-```
-
-Then reference that path literally in your rc file (calling `npm root -g` on every shell start would defeat the purpose):
-
-```bash
-# ~/.zshrc (after compinit) — sourcing gives you completion and aecd immediately
-source /path/to/@zookanalytics/agent-env/completions/_agent-env
-
-# ~/.bashrc
-source /path/to/@zookanalytics/agent-env/completions/agent-env.bash
-```
-
-zsh users can instead add the directory to `fpath` so the script is only loaded the first time you press <kbd>Tab</kbd> after `agent-env` or `aecd`:
-
-```bash
-# ~/.zshrc (before compinit)
-fpath=(/path/to/@zookanalytics/agent-env/completions $fpath)
-autoload -Uz compinit && compinit
-```
-
-With `fpath`, the `aecd` function itself is only defined once that first <kbd>Tab</kbd> has loaded the script (so `aecd <Tab>` works, but typing `aecd name` in full in a fresh shell does not). Use `source` or `eval` if you rely on `aecd` without completing first.
-
-The path changes if you switch Node versions or package managers; the `eval` method is unaffected by that.
+The same scripts ship as static files in the package's `completions/` directory (`_agent-env` for zsh, `agent-env.bash` for bash) if you prefer to `source` them or add the directory to `fpath`.
 
 ## License
 
