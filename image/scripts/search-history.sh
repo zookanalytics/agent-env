@@ -354,11 +354,12 @@ fi
 
 # Execute searches
 # Use if-blocks: a trailing `false && cmd` would make the script exit 1
-# whenever only --zsh is selected.
+# whenever only --zsh is selected. `|| true` keeps set -e from aborting the
+# whole search on one unreadable history file (as the old `&&` form did).
 if $SEARCH_ZSH; then
-  search_zsh "$PATTERN" "$INSTANCE"
+  search_zsh "$PATTERN" "$INSTANCE" || true
 fi
 echo ""
 if $SEARCH_CLAUDE; then
-  search_claude "$PATTERN" "$INSTANCE"
+  search_claude "$PATTERN" "$INSTANCE" || true
 fi
