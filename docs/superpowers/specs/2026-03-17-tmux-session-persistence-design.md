@@ -79,12 +79,12 @@ Sourced by `.zshrc`. Functions take priority over PATH, so the real claude binar
   "%42": {
     "session_id": "aaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
     "window_name": "auth-fix",
-    "cwd": "/workspaces/bmad-orchestrator-bugs"
+    "cwd": "/workspaces/agent-env-bugs"
   },
   "%57": {
     "session_id": "1111-2222-3333-4444-555555555555",
     "window_name": "refactor",
-    "cwd": "/workspaces/bmad-orchestrator-bugs/packages/agent-env"
+    "cwd": "/workspaces/agent-env-bugs/packages/agent-env"
   }
 }
 ```
@@ -122,21 +122,21 @@ New CLI command that captures the full tmux state.
     {
       "index": 1,
       "name": "auth-fix",
-      "cwd": "/workspaces/bmad-orchestrator-bugs",
+      "cwd": "/workspaces/agent-env-bugs",
       "program": "claude",
       "claude_session_id": "aaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
     },
     {
       "index": 2,
       "name": "refactor",
-      "cwd": "/workspaces/bmad-orchestrator-bugs/packages/agent-env",
+      "cwd": "/workspaces/agent-env-bugs/packages/agent-env",
       "program": "claude",
       "claude_session_id": "1111-2222-3333-4444-555555555555"
     },
     {
       "index": 3,
       "name": "shell",
-      "cwd": "/workspaces/bmad-orchestrator-bugs/packages/api",
+      "cwd": "/workspaces/agent-env-bugs/packages/api",
       "program": null
     }
   ]

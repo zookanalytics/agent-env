@@ -62,8 +62,8 @@ describe('repos command', () => {
       const repos: RepoInfo[] = [
         { slug: 'awesome-cli', url: 'https://github.com/user/awesome-cli.git', instanceCount: 1 },
         {
-          slug: 'bmad-orchestrator',
-          url: 'https://github.com/user/bmad-orchestrator.git',
+          slug: 'agent-env',
+          url: 'https://github.com/user/agent-env.git',
           instanceCount: 2,
         },
       ];
@@ -88,9 +88,9 @@ describe('repos command', () => {
 
       // Second data row
       const row2 = consoleLogSpy.mock.calls[2][0] as string;
-      expect(row2).toContain('bmad-orchestrator');
+      expect(row2).toContain('agent-env');
       expect(row2).toContain('2');
-      expect(row2).toContain('https://github.com/user/bmad-orchestrator.git');
+      expect(row2).toContain('https://github.com/user/agent-env.git');
     });
   });
 
@@ -112,8 +112,8 @@ describe('repos command', () => {
       const repos: RepoInfo[] = [
         { slug: 'awesome-cli', url: 'https://github.com/user/awesome-cli.git', instanceCount: 1 },
         {
-          slug: 'bmad-orchestrator',
-          url: 'https://github.com/user/bmad-orchestrator.git',
+          slug: 'agent-env',
+          url: 'https://github.com/user/agent-env.git',
           instanceCount: 3,
         },
       ];
@@ -131,8 +131,8 @@ describe('repos command', () => {
         instanceCount: 1,
       });
       expect(output.data?.[1]).toEqual({
-        slug: 'bmad-orchestrator',
-        url: 'https://github.com/user/bmad-orchestrator.git',
+        slug: 'agent-env',
+        url: 'https://github.com/user/agent-env.git',
         instanceCount: 3,
       });
     });

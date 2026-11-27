@@ -48,7 +48,7 @@ function createTestState(
   overrides: Partial<InstanceState> = {}
 ): InstanceState {
   // Derive instance name from workspace name by splitting at the LAST dash
-  // e.g., "bmad-orch-auth" → instance="auth", repoSlug="bmad-orch"
+  // e.g., "agent-env-auth" → instance="auth", repoSlug="agent-env"
   const lastDashIdx = workspaceName.lastIndexOf('-');
   const instance = lastDashIdx > 0 ? workspaceName.slice(lastDashIdx + 1) : workspaceName;
   const repoSlug = lastDashIdx > 0 ? workspaceName.slice(0, lastDashIdx) : 'repo';
@@ -717,8 +717,8 @@ describe('removeInstance', () => {
   });
 
   it('finds workspace by suffix match', async () => {
-    const state = createTestState('bmad-orch-auth');
-    await createTestWorkspace('bmad-orch-auth', state);
+    const state = createTestState('agent-env-auth');
+    await createTestWorkspace('agent-env-auth', state);
     const deps = createTestDeps();
 
     const result = await removeInstance('auth', deps);

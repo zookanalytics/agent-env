@@ -60,34 +60,32 @@ describe('create command — slug resolution', () => {
 
   describe('slug resolved to URL (AC: #1)', () => {
     it('resolves slug and passes URL to createInstance', async () => {
-      setupMocksForSuccess('https://github.com/user/bmad-orchestrator.git', true);
+      setupMocksForSuccess('https://github.com/user/agent-env.git', true);
 
-      await createCommand.parseAsync(['test-instance', '--repo', 'bmad-orchestrator'], {
+      await createCommand.parseAsync(['test-instance', '--repo', 'agent-env'], {
         from: 'user',
       });
 
       // resolveRepoArg was called with the slug
-      expect(mockResolveRepoArg).toHaveBeenCalledWith('bmad-orchestrator');
+      expect(mockResolveRepoArg).toHaveBeenCalledWith('agent-env');
 
       // resolveRepoUrl was called with the resolved URL
       expect(mockResolveRepoUrl).toHaveBeenCalledWith(
-        'https://github.com/user/bmad-orchestrator.git',
+        'https://github.com/user/agent-env.git',
         fakeDeps.executor
       );
 
       // createInstance was called with the final URL
       expect(mockCreateInstance).toHaveBeenCalledWith(
         'test-instance',
-        'https://github.com/user/bmad-orchestrator.git',
+        'https://github.com/user/agent-env.git',
         fakeDeps,
         expect.objectContaining({})
       );
 
       // User sees the resolution message
       const allLogs = consoleLogSpy.mock.calls.map((c: unknown[]) => c[0] as string);
-      expect(allLogs.some((log: string) => log.includes("Resolved repo 'bmad-orchestrator'"))).toBe(
-        true
-      );
+      expect(allLogs.some((log: string) => log.includes("Resolved repo 'agent-env'"))).toBe(true);
     });
   });
 

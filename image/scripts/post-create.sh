@@ -182,7 +182,6 @@ fi
 # to persist allowBuilds into the correct isolated dir at install time.
 PNPM_ALLOW_BUILDS=(
   --allow-build=@github/keytar
-  --allow-build=@zookanalytics/keystone-workflows
   --allow-build=keytar
   --allow-build=node-pty
   --allow-build=protobufjs
@@ -193,18 +192,6 @@ PNPM_ALLOW_BUILDS=(
 GEMINI_CLI_VERSION="${GEMINI_CLI_VERSION:-latest}"
 echo "  - Installing @google/gemini-cli@${GEMINI_CLI_VERSION}..."
 pnpm install -g "${PNPM_ALLOW_BUILDS[@]}" "@google/gemini-cli@${GEMINI_CLI_VERSION}"
-
-# Install keystone-cli via bun
-echo "  - Installing keystone-cli..."
-if ! bun install -g github:ZookAnalytics/keystone-cli; then
-  echo "  ⚠ keystone-cli update failed, using existing version"
-fi
-
-# Install keystone-workflows from npm (postinstall copies workflows to ~/.keystone/)
-echo "  - Installing @zookanalytics/keystone-workflows..."
-if ! pnpm install -g "${PNPM_ALLOW_BUILDS[@]}" @zookanalytics/keystone-workflows; then
-  echo "  ⚠ keystone-workflows update failed, using existing version"
-fi
 
 # Install agent-env CLI (dev mode: link local build; production: install from npm)
 echo "  - Installing agent-env CLI..."

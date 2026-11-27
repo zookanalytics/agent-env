@@ -265,7 +265,7 @@ export function createContainerLifecycle(executor: Execute = createExecutor()): 
   /**
    * Get the current status of a container by name.
    *
-   * @param containerName - Container name (e.g., "ae-bmad-orch-auth")
+   * @param containerName - Container name (e.g., "ae-agent-env-auth")
    * @returns ContainerResult with status, containerId, and optional error
    */
   async function containerStatus(containerName: string): Promise<ContainerResult> {
@@ -524,7 +524,7 @@ export function createContainerLifecycle(executor: Execute = createExecutor()): 
    * Uses `docker stop` with a 30-second timeout. If the container
    * is already stopped or not found, this is treated as success.
    *
-   * @param containerName - Container name (e.g., "ae-bmad-orch-auth")
+   * @param containerName - Container name (e.g., "ae-agent-env-auth")
    * @returns ContainerStopResult with success/failure info
    */
   async function containerStop(containerName: string): Promise<ContainerStopResult> {
@@ -561,7 +561,7 @@ export function createContainerLifecycle(executor: Execute = createExecutor()): 
    * Uses `docker rm` to remove the container. If the container
    * is not found, this is treated as success (already cleaned up).
    *
-   * @param containerName - Container name (e.g., "ae-bmad-orch-auth")
+   * @param containerName - Container name (e.g., "ae-agent-env-auth")
    * @returns ContainerRemoveResult with success/failure info
    */
   async function containerRemove(containerName: string): Promise<ContainerRemoveResult> {
@@ -622,8 +622,8 @@ export function createContainerLifecycle(executor: Execute = createExecutor()): 
           suggestion:
             `The container image for this agent-env version may not be published yet. ` +
             `Image publishes complete shortly after each release; check workflow status to estimate readiness.\n` +
-            `   • Workflow runs: https://github.com/ZookAnalytics/bmad-orchestrator/actions/workflows/publish-image.yml\n` +
-            `   • Available tags: https://github.com/ZookAnalytics/bmad-orchestrator/pkgs/container/bmad-orchestrator%2Fdevcontainer\n` +
+            `   • Workflow runs: https://github.com/ZookAnalytics/agent-env/actions/workflows/publish-image.yml\n` +
+            `   • Available tags: https://github.com/ZookAnalytics/agent-env/pkgs/container/agent-env%2Fdevcontainer\n` +
             `   • Emergency unblock (ONLY if you already have a previously cached image): ` +
             `retry with --no-pull. The container will start with the locally cached image, which may not match agent-env's current version. ` +
             `If no image is cached, you must wait for the registry tag to publish.`,

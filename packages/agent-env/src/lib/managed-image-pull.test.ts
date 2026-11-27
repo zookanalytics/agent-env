@@ -22,7 +22,7 @@ function makeContainer(overrides: Partial<ContainerLifecycle> = {}): ContainerLi
 describe('pullManagedImage', () => {
   // Compose from base so the literal pattern "<repo>:<semver>" doesn't appear
   // anywhere in the source tree (AC12 falsifiable grep).
-  const image = 'ghcr.io/zookanalytics/bmad-orchestrator/devcontainer' + ':' + '1.2.3';
+  const image = 'ghcr.io/zookanalytics/agent-env/devcontainer' + ':' + '1.2.3';
 
   it('invokes dockerPull and emits info logs when pull=true', async () => {
     const info = vi.fn();

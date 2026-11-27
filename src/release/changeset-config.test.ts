@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CHANGESET_DIR } from './changeset-test-utils.js';
 
-const PROJECT_REPO = 'ZookAnalytics/bmad-orchestrator';
+const PROJECT_REPO = 'ZookAnalytics/agent-env';
 
 /**
  * Validates .changeset/config.json matches the architecture specification.

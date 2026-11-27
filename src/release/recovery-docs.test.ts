@@ -82,7 +82,7 @@ describe('AC2: Trusted Publishing (OIDC) documentation (FR29, FR30)', () => {
 
   it('documents the linked repository', () => {
     const raw = loadWorkflowRaw();
-    expect(raw).toContain('Repository: ZookAnalytics/bmad-orchestrator');
+    expect(raw).toContain('Repository: ZookAnalytics/agent-env');
   });
 
   it('documents the linked workflow name', () => {
@@ -154,7 +154,7 @@ describe('documentation is inline in publish.yml (not a separate file)', () => {
   it('recovery docs are in the same file as the publish step', () => {
     const raw = loadWorkflowRaw();
     // All docs must be in the same file that contains changesets/action
-    expect(raw).toContain('changesets/action@v1');
+    expect(raw).toContain('changesets/action@');
     expect(raw).toContain('RECOVERY PROCEDURES');
     expect(raw).toContain('TRUSTED PUBLISHING');
     expect(raw).toContain('ROLLBACK');

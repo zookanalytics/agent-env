@@ -22,12 +22,12 @@ function createWorkspacePath(base: string, name: string): WorkspacePath {
 
 const validState: InstanceState = {
   instance: 'auth',
-  repoSlug: 'bmad-orch',
-  repoUrl: 'https://github.com/user/bmad-orch.git',
+  repoSlug: 'agent-env',
+  repoUrl: 'https://github.com/user/agent-env.git',
   createdAt: '2026-01-28T10:00:00.000Z',
   lastAttached: '2026-01-28T12:00:00.000Z',
   purpose: 'Authentication feature',
-  containerName: 'ae-bmad-orch-auth',
+  containerName: 'ae-agent-env-auth',
   repoConfigDetected: false,
 };
 
@@ -54,12 +54,12 @@ describe('readState', () => {
     const state = await readState(wsPath);
 
     expect(state.instance).toBe('auth');
-    expect(state.repoSlug).toBe('bmad-orch');
-    expect(state.repoUrl).toBe('https://github.com/user/bmad-orch.git');
+    expect(state.repoSlug).toBe('agent-env');
+    expect(state.repoUrl).toBe('https://github.com/user/agent-env.git');
     expect(state.createdAt).toBe('2026-01-28T10:00:00.000Z');
     expect(state.lastAttached).toBe('2026-01-28T12:00:00.000Z');
     expect(state.purpose).toBe('Authentication feature');
-    expect(state.containerName).toBe('ae-bmad-orch-auth');
+    expect(state.containerName).toBe('ae-agent-env-auth');
   });
 
   it('reads state with null purpose', async () => {
@@ -173,8 +173,8 @@ describe('writeStateAtomic', () => {
     const content = await readFile(wsPath.stateFile, 'utf-8');
     const parsed = JSON.parse(content);
     expect(parsed.instance).toBe('auth');
-    expect(parsed.repoSlug).toBe('bmad-orch');
-    expect(parsed.repoUrl).toBe('https://github.com/user/bmad-orch.git');
+    expect(parsed.repoSlug).toBe('agent-env');
+    expect(parsed.repoUrl).toBe('https://github.com/user/agent-env.git');
     expect(parsed.purpose).toBe('Authentication feature');
   });
 
@@ -296,10 +296,10 @@ describe('writeStateAtomic', () => {
 
 describe('createInitialState', () => {
   it('creates state with provided instance, repoSlug, and repoUrl', () => {
-    const state = createInitialState('auth', 'bmad-orch', 'https://github.com/user/repo.git');
+    const state = createInitialState('auth', 'agent-env', 'https://github.com/user/repo.git');
 
     expect(state.instance).toBe('auth');
-    expect(state.repoSlug).toBe('bmad-orch');
+    expect(state.repoSlug).toBe('agent-env');
     expect(state.repoUrl).toBe('https://github.com/user/repo.git');
   });
 
@@ -319,8 +319,8 @@ describe('createInitialState', () => {
   });
 
   it('derives container name from repoSlug and instance', () => {
-    const state = createInitialState('auth', 'bmad-orch', 'repo-url');
-    expect(state.containerName).toBe('ae-bmad-orch-auth');
+    const state = createInitialState('auth', 'agent-env', 'repo-url');
+    expect(state.containerName).toBe('ae-agent-env-auth');
   });
 
   it('accepts custom container name', () => {
@@ -390,27 +390,27 @@ describe('createInitialState', () => {
 
 describe('old-format state migration', () => {
   it('extracts instance name by stripping repo prefix from old workspace name', async () => {
-    const wsPath = createWorkspacePath(tempDir, 'bmad-orch-auth');
+    const wsPath = createWorkspacePath(tempDir, 'agent-env-auth');
     await mkdir(wsPath.agentEnvDir, { recursive: true });
     const oldState = {
-      name: 'bmad-orch-auth',
-      repo: 'https://github.com/user/bmad-orch.git',
+      name: 'agent-env-auth',
+      repo: 'https://github.com/user/agent-env.git',
       createdAt: '2026-01-01T00:00:00.000Z',
       lastAttached: '2026-01-01T00:00:00.000Z',
       purpose: null,
-      containerName: 'ae-bmad-orch-auth',
+      containerName: 'ae-agent-env-auth',
     };
     await writeFile(wsPath.stateFile, JSON.stringify(oldState, null, 2));
 
     const state = await readState(wsPath);
 
     expect(state.instance).toBe('auth');
-    expect(state.repoSlug).toBe('bmad-orch');
-    expect(state.repoUrl).toBe('https://github.com/user/bmad-orch.git');
+    expect(state.repoSlug).toBe('agent-env');
+    expect(state.repoUrl).toBe('https://github.com/user/agent-env.git');
     expect(state.createdAt).toBe('2026-01-01T00:00:00.000Z');
     expect(state.lastAttached).toBe('2026-01-01T00:00:00.000Z');
     expect(state.purpose).toBeNull();
-    expect(state.containerName).toBe('ae-bmad-orch-auth');
+    expect(state.containerName).toBe('ae-agent-env-auth');
   });
 
   it('handles case-insensitive prefix stripping', async () => {
@@ -604,20 +604,20 @@ describe('old-format state migration', () => {
     await mkdir(wsPath.agentEnvDir, { recursive: true });
     const newState = {
       instance: 'auth',
-      repoSlug: 'bmad-orch',
+      repoSlug: 'agent-env',
       repoUrl: 'https://github.com/user/repo.git',
       createdAt: '2026-01-01T00:00:00.000Z',
       lastAttached: '2026-01-01T00:00:00.000Z',
       purpose: null,
-      containerName: 'ae-bmad-orch-auth',
+      containerName: 'ae-agent-env-auth',
     };
     await writeFile(wsPath.stateFile, JSON.stringify(newState, null, 2));
 
     const state = await readState(wsPath);
 
     expect(state.instance).toBe('auth');
-    expect(state.repoSlug).toBe('bmad-orch');
-    expect(state.containerName).toBe('ae-bmad-orch-auth');
+    expect(state.repoSlug).toBe('agent-env');
+    expect(state.containerName).toBe('ae-agent-env-auth');
     expect(state.repoConfigDetected).toBe(false);
   });
 });

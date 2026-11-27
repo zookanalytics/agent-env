@@ -311,7 +311,7 @@ describe('VersionDriftState typing', () => {
 describe('detectImageDrift', () => {
   // Compose image references from a base + tag so no literal "<repo>:<semver>"
   // string appears in the test source (AC12 falsifiable grep).
-  const IMAGE_BASE = 'ghcr.io/zookanalytics/bmad-orchestrator/devcontainer';
+  const IMAGE_BASE = 'ghcr.io/zookanalytics/agent-env/devcontainer';
   const expectedImage = IMAGE_BASE + ':' + '2.0.0';
   const olderImage = IMAGE_BASE + ':' + '1.0.0';
 

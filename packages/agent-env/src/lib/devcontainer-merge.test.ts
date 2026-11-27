@@ -507,9 +507,7 @@ describe('validateRepoConfig', () => {
   it('warns when repo sets overrideCommand:false (agent-env forces true)', () => {
     const logger = { warn: vi.fn() };
     validateRepoConfig({ overrideCommand: false }, 'ghcr.io/test/managed:latest', logger);
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("'overrideCommand: false'")
-    );
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("'overrideCommand: false'"));
   });
 
   it('does not warn when repo sets overrideCommand:true', () => {
@@ -852,9 +850,7 @@ describe('loadManagedDefaults', () => {
     // both the implementation and the test would see a stale version.
     const pkgUrl = new URL('../../package.json', import.meta.url);
     const pkg = JSON.parse(readFileSync(pkgUrl, 'utf8')) as { version: string };
-    expect(result.image).toBe(
-      `ghcr.io/zookanalytics/bmad-orchestrator/devcontainer:${pkg.version}`
-    );
+    expect(result.image).toBe(`ghcr.io/zookanalytics/agent-env/devcontainer:${pkg.version}`);
     expect(result.initializeCmd).toBe('bash .agent-env/init-host.sh');
     expect(result.baseContainerEnv.AGENT_ENV_CONTAINER).toBe('true');
   });
@@ -875,9 +871,7 @@ describe('loadManagedDefaults', () => {
     const result = await loadManagedDefaults(mockDeps);
     const pkgUrl = new URL('../../package.json', import.meta.url);
     const pkg = JSON.parse(readFileSync(pkgUrl, 'utf8')) as { version: string };
-    expect(result.image).toBe(
-      `ghcr.io/zookanalytics/bmad-orchestrator/devcontainer:${pkg.version}`
-    );
+    expect(result.image).toBe(`ghcr.io/zookanalytics/agent-env/devcontainer:${pkg.version}`);
     expect(result.image).not.toBe('arbitrary-string-from-baseline');
   });
 

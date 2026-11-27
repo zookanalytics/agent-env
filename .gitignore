@@ -39,7 +39,6 @@ coverage/
 .cspellcache
 .prettiercache
 
-.keystone
 
 # Worktrees
 .worktrees/

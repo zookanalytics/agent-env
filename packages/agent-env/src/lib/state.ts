@@ -98,7 +98,7 @@ export async function writeStateAtomic(
  * Create initial state for a new workspace
  *
  * @param instance - User-chosen instance name (e.g., "auth")
- * @param repoSlug - Repo slug derived from URL (e.g., "bmad-orchestrator")
+ * @param repoSlug - Repo slug derived from URL (e.g., "agent-env")
  * @param repoUrl - Full git remote URL
  * @param options - Optional object; when provided, `repoConfigDetected` is required
  * @returns New InstanceState with current timestamp
@@ -150,7 +150,7 @@ function extractRepoName(url: string): string {
 /**
  * Attempt to migrate a pre-Epic 7 state object to the current schema.
  *
- * Pre-Epic 7 state files used `name` (workspace name, e.g. "bmad-orch-auth")
+ * Pre-Epic 7 state files used `name` (workspace name, e.g. "agent-env-auth")
  * and `repo` (full URL) instead of `instance`, `repoSlug`, and `repoUrl`.
  * This function maps those old fields to the new schema, extracting the
  * instance portion from the workspace name and preserving `containerName`,
