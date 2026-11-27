@@ -27,17 +27,25 @@ if [[ "$tool_name" != "Bash" && "$tool_name" != "run_shell_command" ]]; then
     exit 0
 fi
 
-# Match only actual git commit invocations, not strings containing "git" and "commit"
-# Matches: git commit, git -C path commit, git --no-pager commit
-# Anchored to command boundaries: start of line, after &&, ||, ;, |, or $()
-# Does NOT match: echo "git commit", grep "git commit", cat > file with git commit
-if ! echo "$command" | grep -qP '(?:^|&&|\|\||;|\||\$\()\s*git\s(?:[^;|&]*\s)?commit\b'; then
+# Match only invocations where `commit` is git's subcommand.
+# Anchored to command boundaries: start of line, after &&, ||, ;, |, $( or (
+# Optional VAR=value prefixes and a path to git (/usr/bin/git) are allowed.
+# Between `git` and `commit` only global options may appear:
+#   -C <path>, -c <k=v>, --git-dir/--work-tree/--namespace/--config-env <v>
+#   (or =<v>), and bare flags such as --no-pager / -p.
+# `commit` must be a whole word, so commit-tree / commit.gpgsign don't match.
+# Matches:        git commit, git -C path commit, git --no-pager commit
+# Does NOT match: git log --grep commit, git config commit.template,
+#                 echo "git commit", grep "git commit"
+ARG='(?:"[^"]*"|'"'"'[^'"'"']*'"'"'|[^\s;|&()]+)'
+GIT_COMMIT="(?:^|&&|\|\||;|\||\\\$\(|\()\s*(?:\w+=$ARG\s+)*(?:\S*/)?git(?:\s+(?:-[Cc]\s+$ARG|--(?:git-dir|work-tree|namespace|config-env)(?:=$ARG|\s+$ARG)|-[^\s;|&()]+))*\s+commit(?=\s|$|[;|&)])"
+
+if ! echo "$command" | grep -qP "$GIT_COMMIT"; then
     exit 0
 fi
 
 # Allow git commit --amend (special case for pre-commit hook fixes)
-# The boundary anchor already prevents false positives, so .*? is safe here
-if echo "$command" | grep -qP '(?:^|&&|\|\||;|\||\$\()\s*git\s(?:[^;|&]*\s)?commit\s.*--amend'; then
+if echo "$command" | grep -qP "$GIT_COMMIT[^;|&\n]*\s--amend\b"; then
     exit 0
 fi
 
