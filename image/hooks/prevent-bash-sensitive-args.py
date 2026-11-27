@@ -11,10 +11,14 @@ This prevents bypassing file access controls via indirect operations like:
 - cat id_rsa (read via bash instead of Read tool)
 - rm secrets.txt (delete sensitive files)
 
-The hook parses command syntax using shlex to extract tokens (falling back
-to a lenient split for heredocs/comments shlex can't parse), then checks
-each token against sensitive filename patterns. It also handles command
-substitution by recursively checking content inside $(...) and backticks.
+The hook first removes what shlex cannot parse but bash can: heredoc
+bodies and # comments (via a small quote-aware scanner, which also joins
+line continuations and unwraps $'..' / $".." quoting). The remainder is
+tokenized with shlex, splitting on shell operators so `.env;#x` style gluing
+can't hide a name. Heredoc bodies may be scripts, so they are scanned word by
+word. Each token is checked against sensitive filename patterns, and command
+substitutions $(...) and backticks are checked recursively. A command that
+still can't be parsed is malformed and is blocked.
 
 Exit codes:
     0 - Command is allowed
@@ -85,54 +89,147 @@ def extract_command_substitutions(token: str) -> list[str]:
     return results
 
 
-_LENIENT_SPLIT = re.compile(r"[\s;|&<>()`$]+")
+_HEREDOC_START = re.compile(r"<<(-?)[ \t]*(?:'([^'\n]*)'|\"([^\"\n]*)\"|\\?([^\s;|&<>()]+))")
+_WORD_SPLIT = re.compile(r"[\s;|&<>()`$]+")
+_COMMENT_PRECEDERS = set(" \t\n;|&()")
 
 
-def lenient_tokens(command: str) -> list[str]:
+def strip_heredocs_and_comments(command: str) -> tuple[str, list[str]]:
     """
-    Quote-agnostic tokenization that works on any input.
+    Split a command into (shell text, heredoc bodies).
 
-    shlex has no notion of heredocs or comments, so valid bash such as
-    `gh pr create --body-file - <<'EOF' ... don't ... EOF` raises
-    "No closing quotation". This split never fails: it joins line
-    continuations, unwraps $'..' / $"..", then splits on whitespace and
-    shell operators. A second pass with quotes and backslashes removed
-    catches concatenation tricks like `.e''nv`.
+    Walks the command tracking quote state so that `#` and `<<` inside
+    quotes are left alone. Outside quotes it:
+      - drops `# ...` comments up to the end of the line
+      - drops backslash-newline line continuations
+      - unwraps $'..' and $".." by dropping the `$` (shlex then sees a
+        plain quoted string, so `.e$'n'v` tokenizes as `.env`)
+      - removes heredoc bodies from the shell text and returns them
+        separately (the `<<DELIM` operator itself stays in the text)
+
+    Unbalanced quotes are left in place; shlex reports them later.
     """
-    normalized = command.replace("\\\n", "")
-    normalized = re.sub(r"\$(?=['\"])", "", normalized)
-    variants = (normalized, re.sub(r"[\"'\\]", "", normalized))
+    out = []
+    bodies = []
+    pending = []  # (delimiter, strip_tabs) awaiting their bodies
+    i, n = 0, len(command)
+    quote = None
+    while i < n:
+        c = command[i]
+        if quote == "'":
+            out.append(c)
+            if c == "'":
+                quote = None
+            i += 1
+            continue
+        if quote == '"':
+            if c == "\\" and i + 1 < n:
+                out.append(command[i:i + 2])
+                i += 2
+                continue
+            out.append(c)
+            if c == '"':
+                quote = None
+            i += 1
+            continue
+        # Outside quotes
+        if c == "\\" and i + 1 < n:
+            if command[i + 1] != "\n":  # line continuation: drop both
+                out.append(command[i:i + 2])
+            i += 2
+            continue
+        if c in "'\"":
+            quote = c
+            out.append(c)
+            i += 1
+            continue
+        if c == "$" and i + 1 < n and command[i + 1] in "'\"":
+            i += 1  # drop `$` of $'..' / $".."
+            continue
+        if c == "#" and (i == 0 or command[i - 1] in _COMMENT_PRECEDERS):
+            while i < n and command[i] != "\n":
+                i += 1
+            continue
+        if command.startswith("<<", i) and not command.startswith("<<<", i):
+            m = _HEREDOC_START.match(command, i)
+            if m:
+                delim = next(g for g in m.groups()[1:] if g is not None)
+                pending.append((delim, m.group(1) == "-"))
+                out.append(m.group(0))
+                i = m.end()
+                continue
+        if c == "\n" and pending:
+            out.append(c)
+            i += 1
+            for delim, strip_tabs in pending:
+                body = []
+                while i < n:
+                    end = command.find("\n", i)
+                    end = n if end == -1 else end
+                    line = command[i:end]
+                    i = end + 1
+                    if (line.lstrip("\t") if strip_tabs else line) == delim:
+                        break
+                    body.append(line)
+                bodies.append("\n".join(body))
+            pending = []
+            continue
+        out.append(c)
+        i += 1
+    return "".join(out), bodies
+
+
+def shell_tokens(text: str) -> list[str]:
+    """
+    Tokenize shell text with shlex, splitting on operators (; | & < > ( ))
+    so a token glued to an operator can't hide or rename a filename.
+
+    Raises:
+        ValueError: If the text is malformed (unbalanced quotes)
+    """
+    lexer = shlex.shlex(text, posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    lexer.commenters = ""  # comments were already stripped
+    return list(lexer)
+
+
+def body_tokens(body: str) -> list[str]:
+    """
+    Word-split a heredoc body (it may be a script fed to a shell).
+    A second pass with quotes removed catches `.e''nv` style gluing.
+    """
     tokens = []
-    for variant in variants:
-        for tok in _LENIENT_SPLIT.split(variant):
-            tok = tok.strip("\"'\\")
-            if tok:
-                tokens.append(tok)
-    return tokens
+    for variant in (body, re.sub(r"[\"'\\]", "", body)):
+        tokens.extend(t.strip("\"'\\") for t in _WORD_SPLIT.split(variant))
+    return [t for t in tokens if t]
 
 
 def parse_command_tokens(command: str) -> list[str]:
     """
-    Return shlex tokens (when the command parses) plus lenient tokens.
+    Tokens to check: shell-parsed tokens of the command (heredoc bodies and
+    comments removed) plus word-split tokens of each heredoc body.
 
-    Both are always checked, so a token must pass both views to be allowed.
-    Running lenient only as a fallback would let a caller downgrade to it
-    on purpose by appending an unbalanced quote such as `# '`.
+    Raises:
+        ValueError: If the command (minus heredocs/comments) is malformed
     """
-    try:
-        tokens = shlex.split(command, posix=True)
-    except ValueError:
-        tokens = []
-    return tokens + lenient_tokens(command)
+    text, bodies = strip_heredocs_and_comments(command)
+    tokens = shell_tokens(text)
+    for body in bodies:
+        tokens.extend(body_tokens(body))
+    return tokens
 
 
 def contains_sensitive_filename(command: str, _depth: int = 0) -> tuple[bool, str]:
     """
     Check if command contains any sensitive filename pattern.
 
-    Tokenizes with both shlex and a lenient operator/quote-agnostic split
-    (see parse_command_tokens). Each token is checked against sensitive
-    file patterns, with safe patterns (like .env.example) allowed through.
+    Tokenizes via parse_command_tokens (shlex on the command minus heredoc
+    bodies and comments, plus word-split heredoc bodies). Each token is
+    checked against sensitive file patterns, with safe patterns (like
+    .env.example) allowed through.
+
+    Raises:
+        ValueError: If command syntax is malformed
 
     Command substitutions $(...) and backticks are recursively parsed
     and checked.
@@ -172,25 +269,37 @@ def main():
         # Read JSON input from stdin
         input_data = json.load(sys.stdin)
     except json.JSONDecodeError as e:
-        print(f"Error: Invalid JSON input: {e}", file=sys.stderr)
-        sys.exit(1)
+        # Fail closed: exit 1 is non-blocking in Claude Code
+        print(f"🚫 Bash command blocked: invalid hook input: {e}", file=sys.stderr)
+        sys.exit(2)
 
-    tool_name = input_data.get('tool_name', '')
-    tool_input = input_data.get('tool_input', {})
-
-    # Only process Bash commands
-    if tool_name != 'Bash':
-        sys.exit(0)
-
-    command = tool_input.get('command', '')
-    if not command:
-        sys.exit(0)
-
-    # Check if command contains sensitive filename patterns.
-    # Fail closed: an uncaught exception exits 1, which Claude Code treats
-    # as non-blocking and would let the command through.
+    # Fail closed on any unexpected error: an uncaught exception exits 1,
+    # which Claude Code treats as non-blocking and would let the command run.
     try:
+        tool_name = input_data.get('tool_name', '')
+        tool_input = input_data.get('tool_input') or {}
+
+        # Only process Bash commands
+        if tool_name != 'Bash':
+            sys.exit(0)
+
+        command = tool_input.get('command', '')
+        if not command:
+            sys.exit(0)
+
         is_sensitive, matched_pattern = contains_sensitive_filename(command)
+    except ValueError as e:
+        print(f"""🚫 Bash command blocked: malformed command syntax.
+
+Could not parse command (unclosed quotes, invalid escapes, etc.).
+Heredoc bodies and # comments are ignored, so this is a real syntax error.
+
+Parse error: {e}
+Command: {command}
+
+Fix the command syntax and try again.
+""", file=sys.stderr)
+        sys.exit(2)
     except Exception as e:  # noqa: BLE001
         print(f"🚫 Bash command blocked: sensitive-args hook error: {e}",
               file=sys.stderr)
