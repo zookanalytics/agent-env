@@ -6,7 +6,8 @@
 #   /shared-data/
 #   ├── claude/                    # SHARED Claude state
 #   │   ├── inner-config.json      # Account, auth, etc (~/.claude/.claude.json)
-#   │   ├── credentials.json       # Credentials (~/.claude/.credentials.json)
+#   │   ├── secure-storage/        # OAuth credentials + refresh locks, used directly
+#   │   │                          # by Claude via CLAUDE_SECURESTORAGE_CONFIG_DIR
 #   │   ├── settings.json          # User preferences (~/.claude/settings.json)
 #   │   └── config.json            # Theme, MCP servers, project state (~/.claude.json)
 #   ├── gemini/                    # SHARED - entire ~/.gemini directory
@@ -37,7 +38,6 @@
 #   E006: Failed to create symlink (ln -sf failed)
 #   E007: Symlink verification failed (symlink not created or not a symlink)
 #   E008: Final health check failed (symlinks not writable)
-#   E009: Credentials symlink not readable after creation
 
 # --- Testing support ---
 # FAIL_AT_STEP: If set, script will fail after completing that step (for rollback testing)
@@ -320,45 +320,94 @@ echo "  ~/.claude/settings.json -> $SETTINGS_FILE"
 
 check_fail_at_step 6
 
-# --- Helper functions for credential discovery/promotion ---
+# --- Helper functions for the shared Claude credential store ---
+#
+# Claude Code keeps OAuth credentials in <secure-storage dir>/.credentials.json and
+# replaces that file atomically (write temp + rename) on every login and token
+# refresh, which destroys any symlink placed there. It also coordinates refreshes
+# between processes with lock files in that same directory, and reloads the file
+# when another process changes it. So instead of symlinking the file, every
+# container sets CLAUDE_SECURESTORAGE_CONFIG_DIR (image containerEnv) to one shared
+# directory: all instances read, refresh, and lock the same real file, exactly like
+# several terminals on one machine.
+#
+# Refresh tokens rotate, so per-instance copies of the credentials invalidate each
+# other. There must be exactly one store; never copy credentials out of it.
 
-# Discover most recent credentials from instance directories
-# Returns path to most recent .credentials.json, or empty if none found
-discover_most_recent_credentials() {
-  find "$SHARED_DATA/instance" -mindepth 3 -maxdepth 3 -type f -name ".credentials.json" \
-    -path "*/claude/.credentials.json" -printf '%T@ %p\n' 2>/dev/null | \
-    sort -rn | head -1 | cut -d' ' -f2-
+CLAUDE_STORE_DIR="${CLAUDE_SECURESTORAGE_CONFIG_DIR:-$SHARED_DATA/claude/secure-storage}"
+CLAUDE_STORE_FILE="$CLAUDE_STORE_DIR/.credentials.json"
+# Pre-shared-store locations, used only to seed the store once
+LEGACY_SHARED_CREDENTIALS="$SHARED_DATA/claude/credentials.json"
+
+# Print the claude.ai OAuth access-token expiry (ms epoch) of a credentials file.
+# Prints 0 when the file is missing, unparsable, or has no refreshable OAuth entry.
+credentials_expiry() {
+  local value
+  value=$(jq -r 'if .claudeAiOauth.refreshToken then (.claudeAiOauth.expiresAt // 0 | floor) else 0 end' "$1" 2>/dev/null) || value=0
+  if [[ "$value" =~ ^[0-9]+$ ]]; then
+    echo "$value"
+  else
+    echo 0
+  fi
 }
 
-# Promote discovered credentials to shared location with flock safety
-# Args: $1 = path to discovered credentials file
-# Returns: 0 if successful or shared already exists, 1 if failed
-promote_credentials_to_shared() {
-  local discovered_path="$1"
-  mkdir -p "$SHARED_DATA/claude"
+# List legacy credential files (NUL-separated): the old shared file plus any regular
+# (non-symlink) per-instance files that Claude wrote after replacing our symlink.
+list_legacy_credentials() {
+  if [ -f "$LEGACY_SHARED_CREDENTIALS" ] && [ ! -L "$LEGACY_SHARED_CREDENTIALS" ]; then
+    printf '%s\0' "$LEGACY_SHARED_CREDENTIALS"
+  fi
+  find "$SHARED_DATA/instance" -mindepth 3 -maxdepth 3 -type f \
+    -path "*/claude/.credentials.json" -print0 2>/dev/null || true
+}
+
+# Seed the shared store once from the freshest legacy credentials. Freshest = latest
+# access-token expiry, i.e. the most recently refreshed token, whose refresh token is
+# the most likely to still be valid. Once the store file exists Claude owns it: it
+# may hold MCP OAuth tokens or reflect a deliberate /logout, so it is never replaced.
+# Returns: 0 on success (seeded, already present, or nothing to seed), 1 on failure
+seed_shared_credentials() {
   (
-    # Acquire flock with 30s timeout
     if ! flock -w 30 200; then
-      echo "    WARNING: Could not acquire lock for credential promotion"
+      echo "    WARNING: Could not acquire lock for credential seeding"
       exit 1
     fi
 
-    # Check if shared already exists (another instance won the race)
-    if [ -f "$SHARED_DATA/claude/credentials.json" ]; then
+    if [ -e "$CLAUDE_STORE_FILE" ]; then
+      echo "    Shared credential store already present"
       exit 0
     fi
 
-    # Move to shared (atomic)
-    mv "$discovered_path" "$SHARED_DATA/claude/credentials.json" || exit 1
+    local best="" best_expiry=0 candidate expiry
+    while IFS= read -r -d '' candidate; do
+      expiry=$(credentials_expiry "$candidate")
+      if [ "$expiry" -gt "$best_expiry" ]; then
+        best="$candidate"
+        best_expiry="$expiry"
+      fi
+    done < <(list_legacy_credentials)
 
-    # Set permissions BEFORE making visible
-    chmod 644 "$SHARED_DATA/claude/credentials.json" || exit 1
+    if [ -z "$best" ]; then
+      echo "    No existing credentials found - run /login once in any instance"
+      exit 0
+    fi
 
-    # Create symlink back at original location
-    ln -sf "$SHARED_DATA/claude/credentials.json" "$discovered_path" || exit 1
-
+    # Write privately, then rename into place atomically (same as Claude does)
+    local tmp="$CLAUDE_STORE_DIR/.credentials.seed.$$"
+    install -m 600 "$best" "$tmp" || { rm -f "$tmp"; exit 1; }
+    # A Claude process may have logged in while we were scanning: no-clobber rename
+    # (RENAME_NOREPLACE) never replaces it, and leaves $tmp behind if it lost
+    # (mv -n's exit status on skip varies across coreutils versions; check outcome)
+    mv -n "$tmp" "$CLAUDE_STORE_FILE" 2>/dev/null || true
+    if [ -e "$tmp" ]; then
+      rm -f "$tmp"
+      [ -e "$CLAUDE_STORE_FILE" ] || exit 1
+      echo "    Shared credential store created concurrently, keeping it"
+      exit 0
+    fi
+    echo "    ✓ Seeded shared credential store from: $best"
     exit 0
-  ) 200>"$SHARED_DATA/claude/.credentials-sharing.lock"
+  ) 200>"$CLAUDE_STORE_DIR/.seed.lock"
 }
 
 # --- Step 7: Setup shared Claude inner config and credentials ---
@@ -386,52 +435,25 @@ if [ ! -L "$HOME/.claude/.claude.json" ]; then
 fi
 echo "  ~/.claude/.claude.json -> $CLAUDE_INNER_CONFIG"
 
-# 7b: Validate and setup Claude credentials sharing (discovery-based)
-echo "  Validating Claude credentials sharing..."
-CREDENTIALS_FILE="$SHARED_DATA/claude/credentials.json"
-
-if [ -f "$CREDENTIALS_FILE" ]; then
-  echo "    Shared credentials found, ensuring symlink..."
-  rm -f "$HOME/.claude/.credentials.json"
-  if ! ln -sf "$CREDENTIALS_FILE" "$HOME/.claude/.credentials.json"; then
-    echo "E006: ERROR: Failed to create symlink: ~/.claude/.credentials.json -> $CREDENTIALS_FILE"
-    exit 1
-  fi
-  track_symlink "$HOME/.claude/.credentials.json"
-  # Verify readable
-  if [ ! -r "$HOME/.claude/.credentials.json" ]; then
-    echo "E009: ERROR: Credentials symlink not readable"
-    exit 1
-  fi
-  echo "    ✓ Credentials symlinked to shared"
-else
-  discovered=$(discover_most_recent_credentials)
-  if [ -n "$discovered" ]; then
-    echo "    No shared credentials, discovering from instances..."
-    echo "    Found credentials: $discovered"
-    # || true: prevent set -e from killing script on promotion failure;
-    # we check for success via [ -f "$CREDENTIALS_FILE" ] below
-    promote_credentials_to_shared "$discovered" || true
-    # Check if promotion succeeded (shared now exists)
-    if [ -f "$CREDENTIALS_FILE" ]; then
-      rm -f "$HOME/.claude/.credentials.json"
-      if ! ln -sf "$CREDENTIALS_FILE" "$HOME/.claude/.credentials.json"; then
-        echo "E006: ERROR: Failed to create symlink: ~/.claude/.credentials.json -> $CREDENTIALS_FILE"
-        exit 1
-      fi
-      track_symlink "$HOME/.claude/.credentials.json"
-      if [ ! -r "$HOME/.claude/.credentials.json" ]; then
-        echo "E009: ERROR: Credentials symlink not readable"
-        exit 1
-      fi
-      echo "    ✓ Credentials promoted and symlinked"
-    else
-      echo "    Promotion failed, credentials remain local"
-    fi
-  else
-    echo "    No credentials found - first instance will create on auth"
-  fi
+# 7b: Shared credential store (see helper comment above for why not a symlink)
+echo "  Setting up shared Claude credential store..."
+if [ -z "${CLAUDE_SECURESTORAGE_CONFIG_DIR:-}" ]; then
+  echo "    WARNING: CLAUDE_SECURESTORAGE_CONFIG_DIR is not set; Claude Code will"
+  echo "    keep per-instance credentials and ask to log in on each new instance."
 fi
+create_dir "$CLAUDE_STORE_DIR"
+chmod 700 "$CLAUDE_STORE_DIR" 2>/dev/null || true
+
+# Seeding is best-effort: Claude prompts for /login if the store stays empty
+seed_shared_credentials || echo "    WARNING: Could not seed shared credential store"
+
+# Remove the per-instance symlink left by the old symlink-based sharing. Claude no
+# longer reads this path, and the target is a stale legacy file.
+if [ -L "$HOME/.claude/.credentials.json" ]; then
+  rm -f "$HOME/.claude/.credentials.json"
+  echo "    Removed legacy ~/.claude/.credentials.json symlink"
+fi
+echo "    Claude credentials: $CLAUDE_STORE_FILE (shared)"
 
 check_fail_at_step 7
 
@@ -669,7 +691,7 @@ echo ""
 echo "Summary:"
 echo "  Instance ID:        $INSTANCE_ID"
 echo "  Claude data:        $SHARED_DATA/instance/$INSTANCE_ID/claude/ (per-instance)"
-echo "  Claude credentials: $SHARED_DATA/claude/credentials.json (shared)"
+echo "  Claude credentials: $CLAUDE_STORE_DIR/ (shared)"
 echo "  Claude settings:    $SHARED_DATA/claude/settings.json (shared)"
 echo "  Claude config:      $SHARED_DATA/claude/config.json (shared - theme, MCP, state)"
 echo "  Gemini:             $SHARED_DATA/gemini/ (shared)"
