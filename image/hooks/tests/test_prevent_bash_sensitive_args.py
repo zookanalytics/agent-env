@@ -73,6 +73,12 @@ BLOCKED = [
     "bash <<EOF\ncat .e''nv\nEOF",
     # Real syntax errors are still blocked (bash would fail too)
     "echo 'unclosed",
+    # Unquoted backtick substitutions containing spaces
+    "cat `echo .env`",
+    "echo `cat .env`",
+    # `#` that is not a comment must not hide the rest of the line
+    "echo ${x:-a #}; cat .env",
+    "echo `echo #`; cat .env",
 ]
 
 

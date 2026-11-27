@@ -187,7 +187,7 @@ def shell_tokens(text: str) -> list[str]:
     Raises:
         ValueError: If the text is malformed (unbalanced quotes)
     """
-    lexer = shlex.shlex(text, posix=True, punctuation_chars=True)
+    lexer = shlex.shlex(text, posix=True, punctuation_chars="();<>|&`")
     lexer.whitespace_split = True
     lexer.commenters = ""  # comments were already stripped
     return list(lexer)
@@ -204,10 +204,70 @@ def body_tokens(body: str) -> list[str]:
     return [t for t in tokens if t]
 
 
+_WORD_BREAKS = set(" \t\n;|&<>()`")
+
+
+def raw_words(command: str) -> list[str]:
+    """
+    Independent second view of the raw command: never fails, knows nothing
+    about comments or heredocs, and so can't be fooled by mistakes in
+    strip_heredocs_and_comments (e.g. `#` inside ${..}).
+
+    Splits on whitespace, operators and backticks outside quotes. Quoted
+    segments stay inside their word (so quoted prose is one token, not a
+    list of words), and quote characters and `$` before a quote are removed
+    from each word (so `.e''nv` and `.e$'n'v` become `.env`). An unclosed
+    quote runs to the end of the command. Backslash-newline is removed.
+    """
+    words = []
+    cur = []
+    quote = None
+    i, n = 0, len(command)
+    while i < n:
+        c = command[i]
+        if quote:
+            if c == "\\" and quote == '"' and i + 1 < n:
+                cur.append(command[i + 1])
+                i += 2
+                continue
+            if c == quote:
+                quote = None
+            else:
+                cur.append(c)
+            i += 1
+            continue
+        if c == "\\" and i + 1 < n:
+            if command[i + 1] != "\n":
+                cur.append(command[i + 1])
+            i += 2
+            continue
+        if c in "'\"":
+            quote = c
+            if cur and cur[-1] == "$":
+                cur.pop()
+            i += 1
+            continue
+        if c in _WORD_BREAKS:
+            if cur:
+                words.append("".join(cur))
+                cur = []
+            i += 1
+            continue
+        cur.append(c)
+        i += 1
+    if cur:
+        words.append("".join(cur))
+    return words
+
+
 def parse_command_tokens(command: str) -> list[str]:
     """
-    Tokens to check: shell-parsed tokens of the command (heredoc bodies and
-    comments removed) plus word-split tokens of each heredoc body.
+    Tokens to check, from two independent views; a command passes only if
+    every token from both views passes:
+
+    1. shell-parsed tokens of the command with heredoc bodies and comments
+       removed, plus word-split tokens of each heredoc body
+    2. raw_words() of the unmodified command
 
     Raises:
         ValueError: If the command (minus heredocs/comments) is malformed
@@ -216,6 +276,7 @@ def parse_command_tokens(command: str) -> list[str]:
     tokens = shell_tokens(text)
     for body in bodies:
         tokens.extend(body_tokens(body))
+    tokens.extend(raw_words(command))
     return tokens
 
 
