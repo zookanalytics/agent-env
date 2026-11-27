@@ -1,5 +1,11 @@
 # @zookanalytics/agent-env
 
+## 1.3.0
+
+### Minor Changes
+
+- [#127](https://github.com/zookanalytics/agent-env/pull/127) [`f5b7238`](https://github.com/zookanalytics/agent-env/commit/f5b7238f6af9708aa50e23670459c4d25a9d7acb) Thanks [@johnzook](https://github.com/johnzook)! - Use the renamed managed image `ghcr.io/zookanalytics/agent-env/devcontainer` and point repository links at `zookanalytics/agent-env`
+
 ## 1.2.3
 
 ### Patch Changes
