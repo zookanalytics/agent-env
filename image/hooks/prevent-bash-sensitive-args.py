@@ -11,7 +11,8 @@ This prevents bypassing file access controls via indirect operations like:
 - cat id_rsa (read via bash instead of Read tool)
 - rm secrets.txt (delete sensitive files)
 
-The hook parses command syntax using shlex to extract tokens, then checks
+The hook parses command syntax using shlex to extract tokens (falling back
+to a lenient split for heredocs/comments shlex can't parse), then checks
 each token against sensitive filename patterns. It also handles command
 substitution by recursively checking content inside $(...) and backticks.
 
@@ -22,6 +23,7 @@ Exit codes:
 
 import json
 import os
+import re
 import shlex
 import sys
 
@@ -83,14 +85,38 @@ def extract_command_substitutions(token: str) -> list[str]:
     return results
 
 
+_LENIENT_SPLIT = re.compile(r"[\s;|&<>()`$=]+")
+
+
+def lenient_tokens(command: str) -> list[str]:
+    """
+    Tokenize a command that shlex cannot parse.
+
+    shlex has no notion of heredocs or comments, so valid bash such as
+    `gh pr create --body-file - <<'EOF' ... don't ... EOF` or
+    `git status  # don't` raises "No closing quotation". Rather than block
+    those, split on whitespace and shell metacharacters. A second pass with
+    quotes/backslashes removed catches concatenation tricks like `.e''nv`.
+    """
+    variants = (command, re.sub(r"[\"'\\]", "", command))
+    tokens = []
+    for variant in variants:
+        for tok in _LENIENT_SPLIT.split(variant):
+            tok = tok.strip("\"'\\")
+            if tok:
+                tokens.append(tok)
+    return tokens
+
+
 def parse_command_tokens(command: str) -> list[str]:
     """
-    Parse command into tokens using shlex.
-
-    Raises:
-        ValueError: If command is malformed (unclosed quotes, etc.)
+    Parse command into tokens using shlex, falling back to a lenient
+    split when shlex can't handle valid bash (heredocs, comments).
     """
-    return shlex.split(command, posix=True)
+    try:
+        return shlex.split(command, posix=True)
+    except ValueError:
+        return lenient_tokens(command)
 
 
 def contains_sensitive_filename(command: str, _depth: int = 0) -> tuple[bool, str]:
@@ -112,9 +138,6 @@ def contains_sensitive_filename(command: str, _depth: int = 0) -> tuple[bool, st
         Tuple of (is_sensitive, matched_token)
         - is_sensitive: True if command contains sensitive filename
         - matched_token: The token/reason that matched (empty if none)
-
-    Raises:
-        ValueError: If command syntax is malformed
     """
     # Prevent infinite recursion - fail closed for security
     if _depth > 10:
@@ -157,19 +180,7 @@ def main():
         sys.exit(0)
 
     # Check if command contains sensitive filename patterns
-    try:
-        is_sensitive, matched_pattern = contains_sensitive_filename(command)
-    except ValueError as e:
-        print(f"""🚫 Bash command blocked: malformed command syntax.
-
-Could not parse command (unclosed quotes, invalid escapes, etc.)
-
-Parse error: {e}
-Command: {command}
-
-Fix the command syntax and try again.
-""", file=sys.stderr)
-        sys.exit(2)
+    is_sensitive, matched_pattern = contains_sensitive_filename(command)
 
     if is_sensitive:
         print(f"""🚫 Bash command blocked: contains sensitive filename pattern.
