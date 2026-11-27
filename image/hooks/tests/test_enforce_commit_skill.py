@@ -49,6 +49,17 @@ COMMITS = [
     "sudo git commit -m x",
     "if true; then git commit -m x; fi",
     "echo $(git commit -m x)",
+    # Prefix commands with their own options
+    "sudo -u bob git commit -m x",
+    "env -i git commit -m x",
+    "timeout 60 git commit -m x",
+    "nice -n 10 git commit -m x",
+    # Nested substitution in a global option
+    "git -C $(dirname $(pwd)) commit -m x",
+    # A comment mentioning --amend doesn't exempt a plain commit
+    "git commit -m x # --amend",
+    # An apostrophe elsewhere can't hide a commit
+    "echo don't && git commit -m x && echo it's",
 ]
 
 NOT_COMMITS = [
@@ -70,6 +81,9 @@ NOT_COMMITS = [
     "git commit --amend --no-edit",
     "git -C /repo commit --amend -m y",
     'git commit --amend -m "reword: it\'s fixed"',
+    # Keywords inside quoted prose are not command boundaries
+    'echo "now do git commit and push"',
+    'gh pr create --body "Run sudo git commit -s to sign"',
 ]
 
 
