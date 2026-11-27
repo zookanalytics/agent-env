@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-# Agent Tools project-specific post-create tasks
+# agent-env project-specific post-create tasks
 # Called by the base image's post-create.sh (step 12)
 
-echo "=== Agent Tools Project Setup ==="
+echo "=== agent-env Project Setup ==="
 
 # Install project dependencies
 echo ""
