@@ -148,6 +148,26 @@ jobs:
             coverage/
           retention-days: 7
 
+  # Tests for the container image: Claude Code safety hooks (Python unittest)
+  # and image scripts (bats). These live outside the pnpm workspace, so
+  # `pnpm -r test` does not run them.
+  image-tests:
+    name: Image Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install bats
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq bats
+
+      - name: Run hook tests
+        run: python3 -m unittest discover -s image/hooks/tests -v
+
+      - name: Run image script tests
+        run: bats image/scripts/__tests__/
+
   # Enforce changeset presence on PRs that touch publishable packages.
   # Blocks merge when no changeset is found. Apply the `no-changeset-needed`
   # label to opt out for docs-only, CI, or infrastructure PRs.
