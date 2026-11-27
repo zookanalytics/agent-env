@@ -1,5 +1,11 @@
 # @zookanalytics/agent-env
 
+## 1.3.1
+
+### Patch Changes
+
+- [#130](https://github.com/zookanalytics/agent-env/pull/130) [`1b04829`](https://github.com/zookanalytics/agent-env/commit/1b048293276b0c406777955f11d1ba9414318445) Thanks [@johnzook](https://github.com/johnzook)! - Share one Claude Code login across all instances. The devcontainer now sets `CLAUDE_SECURESTORAGE_CONFIG_DIR=/shared-data/claude/secure-storage`, so every container reads, refreshes, and locks the same credentials file instead of a symlink that Claude replaced on each token refresh. Existing credentials are migrated automatically on first start (the most recently refreshed one wins); new instances no longer ask you to log in.
+
 ## 1.3.0
 
 ### Minor Changes
