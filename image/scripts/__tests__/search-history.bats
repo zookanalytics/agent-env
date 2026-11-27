@@ -20,13 +20,9 @@ setup() {
     cp -r "$FIXTURES_DIR/instance-2" "$SHARED_DATA_DIR/instance/"
   fi
 
-  # Path to script under test
-  SCRIPT="/usr/local/bin/search-history.sh"
-
-  # If running locally (not in container), use relative path
-  if [ ! -f "$SCRIPT" ]; then
-    SCRIPT="${BATS_TEST_DIRNAME}/../search-history.sh"
-  fi
+  # Path to script under test: always the repo copy, so a container's
+  # installed /usr/local/bin version can't mask changes under test
+  SCRIPT="${BATS_TEST_DIRNAME}/../search-history.sh"
 }
 
 # Teardown: Clean up temp directories after each test

@@ -353,6 +353,12 @@ if ! $SEARCH_ZSH && ! $SEARCH_CLAUDE; then
 fi
 
 # Execute searches
-$SEARCH_ZSH && search_zsh "$PATTERN" "$INSTANCE"
+# Use if-blocks: a trailing `false && cmd` would make the script exit 1
+# whenever only --zsh is selected.
+if $SEARCH_ZSH; then
+  search_zsh "$PATTERN" "$INSTANCE"
+fi
 echo ""
-$SEARCH_CLAUDE && search_claude "$PATTERN" "$INSTANCE"
+if $SEARCH_CLAUDE; then
+  search_claude "$PATTERN" "$INSTANCE"
+fi
