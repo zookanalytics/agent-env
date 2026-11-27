@@ -85,20 +85,23 @@ def extract_command_substitutions(token: str) -> list[str]:
     return results
 
 
-_LENIENT_SPLIT = re.compile(r"[\s;|&<>()`$=]+")
+_LENIENT_SPLIT = re.compile(r"[\s;|&<>()`$]+")
 
 
 def lenient_tokens(command: str) -> list[str]:
     """
-    Tokenize a command that shlex cannot parse.
+    Quote-agnostic tokenization that works on any input.
 
     shlex has no notion of heredocs or comments, so valid bash such as
-    `gh pr create --body-file - <<'EOF' ... don't ... EOF` or
-    `git status  # don't` raises "No closing quotation". Rather than block
-    those, split on whitespace and shell metacharacters. A second pass with
-    quotes/backslashes removed catches concatenation tricks like `.e''nv`.
+    `gh pr create --body-file - <<'EOF' ... don't ... EOF` raises
+    "No closing quotation". This split never fails: it joins line
+    continuations, unwraps $'..' / $"..", then splits on whitespace and
+    shell operators. A second pass with quotes and backslashes removed
+    catches concatenation tricks like `.e''nv`.
     """
-    variants = (command, re.sub(r"[\"'\\]", "", command))
+    normalized = command.replace("\\\n", "")
+    normalized = re.sub(r"\$(?=['\"])", "", normalized)
+    variants = (normalized, re.sub(r"[\"'\\]", "", normalized))
     tokens = []
     for variant in variants:
         for tok in _LENIENT_SPLIT.split(variant):
@@ -110,22 +113,26 @@ def lenient_tokens(command: str) -> list[str]:
 
 def parse_command_tokens(command: str) -> list[str]:
     """
-    Parse command into tokens using shlex, falling back to a lenient
-    split when shlex can't handle valid bash (heredocs, comments).
+    Return shlex tokens (when the command parses) plus lenient tokens.
+
+    Both are always checked, so a token must pass both views to be allowed.
+    Running lenient only as a fallback would let a caller downgrade to it
+    on purpose by appending an unbalanced quote such as `# '`.
     """
     try:
-        return shlex.split(command, posix=True)
+        tokens = shlex.split(command, posix=True)
     except ValueError:
-        return lenient_tokens(command)
+        tokens = []
+    return tokens + lenient_tokens(command)
 
 
 def contains_sensitive_filename(command: str, _depth: int = 0) -> tuple[bool, str]:
     """
     Check if command contains any sensitive filename pattern.
 
-    Uses shlex to properly tokenize the command, handling quoted strings
-    and escapes. Each token is checked against sensitive file patterns,
-    with safe patterns (like .env.example) allowed through.
+    Tokenizes with both shlex and a lenient operator/quote-agnostic split
+    (see parse_command_tokens). Each token is checked against sensitive
+    file patterns, with safe patterns (like .env.example) allowed through.
 
     Command substitutions $(...) and backticks are recursively parsed
     and checked.
@@ -179,8 +186,15 @@ def main():
     if not command:
         sys.exit(0)
 
-    # Check if command contains sensitive filename patterns
-    is_sensitive, matched_pattern = contains_sensitive_filename(command)
+    # Check if command contains sensitive filename patterns.
+    # Fail closed: an uncaught exception exits 1, which Claude Code treats
+    # as non-blocking and would let the command through.
+    try:
+        is_sensitive, matched_pattern = contains_sensitive_filename(command)
+    except Exception as e:  # noqa: BLE001
+        print(f"🚫 Bash command blocked: sensitive-args hook error: {e}",
+              file=sys.stderr)
+        sys.exit(2)
 
     if is_sensitive:
         print(f"""🚫 Bash command blocked: contains sensitive filename pattern.
