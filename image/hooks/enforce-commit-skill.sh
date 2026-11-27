@@ -28,24 +28,43 @@ if [[ "$tool_name" != "Bash" && "$tool_name" != "run_shell_command" ]]; then
 fi
 
 # Match only invocations where `commit` is git's subcommand.
-# Anchored to command boundaries: start of line, after &&, ||, ;, |, $( or (
-# Optional VAR=value prefixes and a path to git (/usr/bin/git) are allowed.
-# Between `git` and `commit` only global options may appear:
+#
+# BOUNDARY: start of line, after && || ; | ( $( { ! or a backtick, or after
+#   a keyword/prefix command (then, do, time, exec, env, sudo, ...).
+# PREFIX:   optional VAR=value assignments and a path to git (/usr/bin/git).
+# OPTS:     between `git` and `commit` only global options may appear:
 #   -C <path>, -c <k=v>, --git-dir/--work-tree/--namespace/--config-env <v>
 #   (or =<v>), and bare flags such as --no-pager / -p.
+# ARG:      a shell word: any mix of "..." / '...' / \x / $(...) / `...`
+#   segments and plain characters.
 # `commit` must be a whole word, so commit-tree / commit.gpgsign don't match.
-# Matches:        git commit, git -C path commit, git --no-pager commit
+#
+# Matches:        git commit, git -C "$(pwd)" commit, { git commit; }
 # Does NOT match: git log --grep commit, git config commit.template,
 #                 echo "git commit", grep "git commit"
-ARG='(?:"[^"]*"|'"'"'[^'"'"']*'"'"'|[^\s;|&()]+)'
-GIT_COMMIT="(?:^|&&|\|\||;|\||\\\$\(|\()\s*(?:\w+=$ARG\s+)*(?:\S*/)?git(?:\s+(?:-[Cc]\s+$ARG|--(?:git-dir|work-tree|namespace|config-env)(?:=$ARG|\s+$ARG)|-[^\s;|&()]+))*\s+commit(?=\s|$|[;|&)])"
+ARG=$(cat <<'RE'
+(?:"(?:[^"\\]|\\.)*"|'[^']*'|\\.|\$\([^)]*\)|`[^`]*`|[^\s;|&()"'\\`])+
+RE
+)
+BOUNDARY=$(cat <<'RE'
+(?:^|&&|\|\||;|\||\$\(|\(|\{|!|`|\b(?:then|do|else|time|exec|env|command|sudo|nice|nohup)\b)
+RE
+)
+GIT_COMMIT="${BOUNDARY}\s*(?:\w+=${ARG}\s+)*(?:\S*/)?git(?:\s+(?:-[Cc]\s+${ARG}|--(?:git-dir|work-tree|namespace|config-env)(?:=${ARG}|\s+${ARG})|-[^\s;|&()]+))*\s+commit(?=\s|$|[;|&)\`])"
 
-if ! echo "$command" | grep -qP "$GIT_COMMIT"; then
+# `|| true`: grep exits 1 on no match, which pipefail + set -e would turn
+# into a non-blocking hook failure
+commit_count=$(printf '%s\n' "$command" | { grep -oP "$GIT_COMMIT" || true; } | wc -l)
+if [[ $commit_count -eq 0 ]]; then
     exit 0
 fi
 
-# Allow git commit --amend (special case for pre-commit hook fixes)
-if echo "$command" | grep -qP "$GIT_COMMIT[^;|&\n]*\s--amend\b"; then
+# Allow git commit --amend (special case for pre-commit hook fixes), but
+# only when EVERY commit in the command is an amend. Quoted strings are
+# replaced with a placeholder first so `-m "... --amend ..."` doesn't count.
+unquoted=$(printf '%s\n' "$command" | sed -E "s/\"([^\"\\\\]|\\\\.)*\"/Q/g; s/'[^']*'/Q/g")
+amend_count=$(printf '%s\n' "$unquoted" | { grep -oP "${GIT_COMMIT}[^;|&\n]*\s--amend\b" || true; } | wc -l)
+if [[ $amend_count -ge $commit_count ]]; then
     exit 0
 fi
 

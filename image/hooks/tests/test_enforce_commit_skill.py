@@ -35,6 +35,20 @@ COMMITS = [
     "git commit;echo done",
     # A later --amend elsewhere must not exempt a plain commit
     "git commit -m y; git log --amend-check",
+    "git commit -m a; git commit --amend --no-edit",
+    'cd x && git commit -m "mention --amend"',
+    # Mixed-quote, substitution and escaped-space arguments
+    'git -c user.name="John Doe" commit -m x',
+    "git -C $(pwd) commit -m x",
+    "git -C ~/My\\ Repo commit -m x",
+    "FOO=$(date) git commit -m x",
+    # Brace groups and prefix commands
+    "{ git commit -m x; }",
+    "time git commit -m x",
+    "exec git commit -m x",
+    "sudo git commit -m x",
+    "if true; then git commit -m x; fi",
+    "echo $(git commit -m x)",
 ]
 
 NOT_COMMITS = [
@@ -55,6 +69,7 @@ NOT_COMMITS = [
     # --amend is exempt
     "git commit --amend --no-edit",
     "git -C /repo commit --amend -m y",
+    'git commit --amend -m "reword: it\'s fixed"',
 ]
 
 
